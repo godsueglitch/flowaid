@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Store, DollarSign, Users, TrendingUp, Package, Heart } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const SchoolDashboard = () => {
   return (
@@ -114,10 +115,12 @@ const SchoolDashboard = () => {
                   <p className="text-2xl font-bold text-white">158</p>
                 </div>
               </div>
-              <Button variant="secondary" className="w-full" size="lg">
-                <Package className="mr-2 w-5 h-5" />
-                Manage Store
-              </Button>
+              <Link to="/other-donations">
+                <Button variant="secondary" className="w-full" size="lg">
+                  <Package className="mr-2 w-5 h-5" />
+                  Manage Store
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         </div>

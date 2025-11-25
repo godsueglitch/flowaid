@@ -1,1 +1,4 @@
 project_id = "fatemrpqgriwmtcxhzwd"
+
+[functions.process-donation]
+verify_jwt = true
