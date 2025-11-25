@@ -78,8 +78,64 @@ const Donate = () => {
     setShowDonationModal(true);
   };
 
-  const handleConnectWallet = () => {
-    navigate("/auth?action=connect-wallet");
+  const handleConnectWallet = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in first",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
+
+    // Try to connect wallet via MetaMask or use demo mode
+    const ethereum = (window as any).ethereum;
+    let address = "";
+
+    if (typeof ethereum !== "undefined") {
+      try {
+        const accounts = await ethereum.request({ method: "eth_requestAccounts" });
+        address = accounts[0];
+        toast({
+          title: "Wallet Connected! 🎉",
+          description: "Your wallet has been connected successfully",
+        });
+      } catch (error) {
+        toast({
+          title: "Connection Failed",
+          description: "Using demo wallet address",
+        });
+        // Demo mode
+        address = "0x" + Math.random().toString(16).substr(2, 40);
+      }
+    } else {
+      toast({
+        title: "MetaMask Not Detected",
+        description: "Using demo wallet address",
+      });
+      // Demo mode for users without MetaMask
+      address = "0x" + Math.random().toString(16).substr(2, 40);
+    }
+
+    // Save wallet address to profile
+    const { error } = await supabase
+      .from("profiles")
+      .update({ wallet_address: address })
+      .eq("id", user.id);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save wallet address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setWalletAddress(address);
   };
 
   const processDonation = async () => {
