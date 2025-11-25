@@ -71,33 +71,15 @@ const Donate = () => {
   };
 
   const handleDonateClick = async (product: Product) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please log in to make a donation",
-        variant: "destructive",
-      });
-      navigate("/auth");
-      return;
-    }
-
-    // Check if wallet is connected
-    if (!walletAddress) {
-      toast({
-        title: "Connect Your Wallet",
-        description: "Please connect your wallet to continue with the donation",
-      });
-      navigate("/auth?action=connect-wallet");
-      return;
-    }
-
-    // Show donation modal
+    // Show donation modal immediately - wallet connection will be handled inside
     setSelectedProduct(product);
     setQuantity(1);
     setCustomAmount("");
     setShowDonationModal(true);
+  };
+
+  const handleConnectWallet = () => {
+    navigate("/auth?action=connect-wallet");
   };
 
   const processDonation = async () => {
@@ -294,16 +276,39 @@ const Donate = () => {
             
             {selectedProduct && (
               <div className="space-y-6 py-4">
-                {/* Wallet Info */}
-                <div className="p-4 rounded-lg bg-muted/50">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Wallet className="w-4 h-4 text-primary" />
-                    <span className="text-sm font-medium">Connected Wallet</span>
+                {/* Wallet Connection Section */}
+                {!walletAddress ? (
+                  <div className="p-6 rounded-lg bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20 text-center space-y-4">
+                    <div className="flex justify-center">
+                      <div className="w-12 h-12 rounded-full gradient-pink flex items-center justify-center">
+                        <Wallet className="w-6 h-6 text-white" />
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-2">Connect Your Wallet</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Connect your wallet to complete the donation process
+                      </p>
+                    </div>
+                    <Button
+                      className="w-full btn-glow"
+                      onClick={handleConnectWallet}
+                    >
+                      <Wallet className="mr-2 w-4 h-4" />
+                      Connect Wallet
+                    </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground font-mono truncate">
-                    {walletAddress}
-                  </p>
-                </div>
+                ) : (
+                  <div className="p-4 rounded-lg bg-muted/50">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Wallet className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-medium">Connected Wallet</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground font-mono truncate">
+                      {walletAddress}
+                    </p>
+                  </div>
+                )}
 
                 {/* Quantity Selection */}
                 <div className="space-y-2">
@@ -376,7 +381,7 @@ const Donate = () => {
                   <Button
                     className="flex-1 btn-glow"
                     onClick={processDonation}
-                    disabled={processing}
+                    disabled={processing || !walletAddress}
                   >
                     {processing ? (
                       <>Processing...</>
