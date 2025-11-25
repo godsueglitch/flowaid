@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Book, Laptop, Heart, ArrowLeft, Package } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Book, Laptop, Heart, ArrowLeft, Package, Wallet, Shirt, Utensils } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -19,13 +22,34 @@ interface Product {
 const OtherDonations = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [processing, setProcessing] = useState<string | null>(null);
+  const [processing, setProcessing] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [showDonationModal, setShowDonationModal] = useState(false);
+  const [quantity, setQuantity] = useState(1);
+  const [customAmount, setCustomAmount] = useState("");
+  const [walletAddress, setWalletAddress] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     fetchProducts();
+    checkWalletConnection();
   }, []);
+
+  const checkWalletConnection = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("wallet_address")
+        .eq("id", user.id)
+        .single();
+      
+      if (profile?.wallet_address) {
+        setWalletAddress(profile.wallet_address);
+      }
+    }
+  };
 
   const fetchProducts = async () => {
     const { data, error } = await supabase
@@ -46,7 +70,7 @@ const OtherDonations = () => {
     setLoading(false);
   };
 
-  const handleDonate = async (product: Product) => {
+  const handleDonateClick = async (product: Product) => {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
@@ -59,14 +83,45 @@ const OtherDonations = () => {
       return;
     }
 
-    setProcessing(product.id);
+    if (!walletAddress) {
+      toast({
+        title: "Connect Your Wallet",
+        description: "Please connect your wallet to continue",
+      });
+      navigate("/auth?action=connect-wallet");
+      return;
+    }
+
+    setSelectedProduct(product);
+    setQuantity(1);
+    setCustomAmount("");
+    setShowDonationModal(true);
+  };
+
+  const processDonation = async () => {
+    if (!selectedProduct) return;
+
+    setProcessing(true);
 
     try {
+      const amount = customAmount 
+        ? parseFloat(customAmount) 
+        : selectedProduct.price * quantity;
+
+      if (amount <= 0) {
+        toast({
+          title: "Invalid Amount",
+          description: "Please enter a valid donation amount",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke("process-donation", {
         body: {
-          productId: product.id,
-          amount: product.price,
-          quantity: 1,
+          productId: selectedProduct.id,
+          amount: amount,
+          quantity: quantity,
         },
       });
 
@@ -74,10 +129,12 @@ const OtherDonations = () => {
 
       toast({
         title: "Donation Initiated! 💖",
-        description: `Processing your donation for ${product.name}`,
+        description: `Processing your donation of $${amount.toFixed(2)}`,
       });
 
-      if (data.paymentUrl) {
+      setShowDonationModal(false);
+
+      if (data?.paymentUrl) {
         window.open(data.paymentUrl, "_blank");
       }
     } catch (error: any) {
@@ -87,7 +144,7 @@ const OtherDonations = () => {
         variant: "destructive",
       });
     } finally {
-      setProcessing(null);
+      setProcessing(false);
     }
   };
 
@@ -97,6 +154,10 @@ const OtherDonations = () => {
         return <Book className="w-8 h-8 text-white" />;
       case "technology":
         return <Laptop className="w-8 h-8 text-white" />;
+      case "uniforms":
+        return <Shirt className="w-8 h-8 text-white" />;
+      case "meals":
+        return <Utensils className="w-8 h-8 text-white" />;
       default:
         return <Package className="w-8 h-8 text-white" />;
     }
@@ -165,16 +226,118 @@ const OtherDonations = () => {
                   </div>
                   <Button
                     className="w-full btn-glow"
-                    onClick={() => handleDonate(product)}
-                    disabled={processing === product.id || product.stock === 0}
+                    onClick={() => handleDonateClick(product)}
+                    disabled={product.stock === 0}
                   >
-                    {processing === product.id ? "Processing..." : "Donate Now"}
+                    Donate Now
                   </Button>
                 </CardContent>
               </Card>
             ))}
           </div>
         )}
+
+        {/* Donation Modal */}
+        <Dialog open={showDonationModal} onOpenChange={setShowDonationModal}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Complete Your Donation</DialogTitle>
+              <DialogDescription>
+                {selectedProduct && `Donating ${selectedProduct.name}`}
+              </DialogDescription>
+            </DialogHeader>
+            
+            {selectedProduct && (
+              <div className="space-y-6 py-4">
+                <div className="p-4 rounded-lg bg-muted/50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Wallet className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-medium">Connected Wallet</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground font-mono truncate">
+                    {walletAddress}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="quantity">Quantity</Label>
+                  <Input
+                    id="quantity"
+                    type="number"
+                    min="1"
+                    max={selectedProduct.stock}
+                    value={quantity}
+                    onChange={(e) => {
+                      setQuantity(Math.max(1, parseInt(e.target.value) || 1));
+                      setCustomAmount("");
+                    }}
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    ${selectedProduct.price} each = ${(selectedProduct.price * quantity).toFixed(2)} total
+                  </p>
+                </div>
+
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">Or</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="custom-amount">Custom Amount (USD)</Label>
+                  <Input
+                    id="custom-amount"
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    placeholder="Enter custom amount"
+                    value={customAmount}
+                    onChange={(e) => setCustomAmount(e.target.value)}
+                  />
+                </div>
+
+                <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">Total Donation:</span>
+                    <span className="text-2xl font-bold text-primary">
+                      ${customAmount 
+                        ? parseFloat(customAmount).toFixed(2) 
+                        : (selectedProduct.price * quantity).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => setShowDonationModal(false)}
+                    disabled={processing}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    className="flex-1 btn-glow"
+                    onClick={processDonation}
+                    disabled={processing}
+                  >
+                    {processing ? (
+                      <>Processing...</>
+                    ) : (
+                      <>
+                        <Heart className="mr-2 w-4 h-4" />
+                        Confirm
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

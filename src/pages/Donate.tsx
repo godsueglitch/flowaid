@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Heart, Package, ArrowRight, Check } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Heart, Package, ArrowRight, Check, Wallet } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -19,13 +22,34 @@ interface Product {
 const Donate = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [processing, setProcessing] = useState<string | null>(null);
+  const [processing, setProcessing] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [showDonationModal, setShowDonationModal] = useState(false);
+  const [quantity, setQuantity] = useState(1);
+  const [customAmount, setCustomAmount] = useState("");
+  const [walletAddress, setWalletAddress] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     fetchProducts();
+    checkWalletConnection();
   }, []);
+
+  const checkWalletConnection = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("wallet_address")
+        .eq("id", user.id)
+        .single();
+      
+      if (profile?.wallet_address) {
+        setWalletAddress(profile.wallet_address);
+      }
+    }
+  };
 
   const fetchProducts = async () => {
     const { data, error } = await supabase
@@ -46,7 +70,7 @@ const Donate = () => {
     setLoading(false);
   };
 
-  const handleDonate = async (product: Product) => {
+  const handleDonateClick = async (product: Product) => {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
@@ -59,15 +83,48 @@ const Donate = () => {
       return;
     }
 
-    setProcessing(product.id);
+    // Check if wallet is connected
+    if (!walletAddress) {
+      toast({
+        title: "Connect Your Wallet",
+        description: "Please connect your wallet to continue with the donation",
+      });
+      navigate("/auth?action=connect-wallet");
+      return;
+    }
+
+    // Show donation modal
+    setSelectedProduct(product);
+    setQuantity(1);
+    setCustomAmount("");
+    setShowDonationModal(true);
+  };
+
+  const processDonation = async () => {
+    if (!selectedProduct) return;
+
+    setProcessing(true);
 
     try {
+      const amount = customAmount 
+        ? parseFloat(customAmount) 
+        : selectedProduct.price * quantity;
+
+      if (amount <= 0) {
+        toast({
+          title: "Invalid Amount",
+          description: "Please enter a valid donation amount",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Call edge function to process payment via Bitnob
       const { data, error } = await supabase.functions.invoke("process-donation", {
         body: {
-          productId: product.id,
-          amount: product.price,
-          quantity: 1,
+          productId: selectedProduct.id,
+          amount: amount,
+          quantity: quantity,
         },
       });
 
@@ -75,11 +132,13 @@ const Donate = () => {
 
       toast({
         title: "Donation Initiated! 💖",
-        description: `Processing your donation of ${product.name}`,
+        description: `Processing your donation of $${amount.toFixed(2)}`,
       });
 
-      // Redirect to payment page or wallet connection
-      if (data.paymentUrl) {
+      setShowDonationModal(false);
+
+      // Redirect to payment page
+      if (data?.paymentUrl) {
         window.open(data.paymentUrl, "_blank");
       }
     } catch (error: any) {
@@ -89,7 +148,7 @@ const Donate = () => {
         variant: "destructive",
       });
     } finally {
-      setProcessing(null);
+      setProcessing(false);
     }
   };
 
@@ -189,18 +248,12 @@ const Donate = () => {
                   <Button
                     className="w-full btn-glow"
                     size="lg"
-                    onClick={() => handleDonate(product)}
-                    disabled={processing === product.id || product.stock === 0}
+                    onClick={() => handleDonateClick(product)}
+                    disabled={product.stock === 0}
                   >
-                    {processing === product.id ? (
-                      <>Processing...</>
-                    ) : (
-                      <>
-                        <Heart className="mr-2 w-5 h-5" />
-                        Donate Now
-                        <ArrowRight className="ml-2 w-5 h-5" />
-                      </>
-                    )}
+                    <Heart className="mr-2 w-5 h-5" />
+                    Donate Now
+                    <ArrowRight className="ml-2 w-5 h-5" />
                   </Button>
                 </CardContent>
               </Card>
@@ -228,6 +281,117 @@ const Donate = () => {
             </Button>
           </CardContent>
         </Card>
+
+        {/* Donation Modal */}
+        <Dialog open={showDonationModal} onOpenChange={setShowDonationModal}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Complete Your Donation</DialogTitle>
+              <DialogDescription>
+                {selectedProduct && `Donating ${selectedProduct.name}`}
+              </DialogDescription>
+            </DialogHeader>
+            
+            {selectedProduct && (
+              <div className="space-y-6 py-4">
+                {/* Wallet Info */}
+                <div className="p-4 rounded-lg bg-muted/50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Wallet className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-medium">Connected Wallet</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground font-mono truncate">
+                    {walletAddress}
+                  </p>
+                </div>
+
+                {/* Quantity Selection */}
+                <div className="space-y-2">
+                  <Label htmlFor="quantity">Quantity (Packs)</Label>
+                  <Input
+                    id="quantity"
+                    type="number"
+                    min="1"
+                    max={selectedProduct.stock}
+                    value={quantity}
+                    onChange={(e) => {
+                      setQuantity(Math.max(1, parseInt(e.target.value) || 1));
+                      setCustomAmount("");
+                    }}
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    ${selectedProduct.price} per pack = ${(selectedProduct.price * quantity).toFixed(2)} total
+                  </p>
+                </div>
+
+                {/* OR Divider */}
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">Or</span>
+                  </div>
+                </div>
+
+                {/* Custom Amount */}
+                <div className="space-y-2">
+                  <Label htmlFor="custom-amount">Custom Amount (USD)</Label>
+                  <Input
+                    id="custom-amount"
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    placeholder="Enter custom amount"
+                    value={customAmount}
+                    onChange={(e) => setCustomAmount(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Enter any amount you'd like to donate
+                  </p>
+                </div>
+
+                {/* Total Display */}
+                <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">Total Donation:</span>
+                    <span className="text-2xl font-bold text-primary">
+                      ${customAmount 
+                        ? parseFloat(customAmount).toFixed(2) 
+                        : (selectedProduct.price * quantity).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => setShowDonationModal(false)}
+                    disabled={processing}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    className="flex-1 btn-glow"
+                    onClick={processDonation}
+                    disabled={processing}
+                  >
+                    {processing ? (
+                      <>Processing...</>
+                    ) : (
+                      <>
+                        <Heart className="mr-2 w-4 h-4" />
+                        Confirm Donation
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
