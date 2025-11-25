@@ -93,27 +93,33 @@ const DonorDashboard = () => {
               <CardDescription className="text-white/80">What would you like to do today?</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button variant="secondary" className="w-full justify-between btn-glow" size="lg">
-                <span className="flex items-center gap-2">
-                  <Heart className="w-5 h-5" />
-                  Make a Donation
-                </span>
-                <ArrowRight className="w-5 h-5" />
-              </Button>
-              <Button variant="secondary" className="w-full justify-between" size="lg">
-                <span className="flex items-center gap-2">
-                  <Store className="w-5 h-5" />
-                  Browse School Stores
-                </span>
-                <ArrowRight className="w-5 h-5" />
-              </Button>
-              <Button variant="secondary" className="w-full justify-between" size="lg">
-                <span className="flex items-center gap-2">
-                  <Wallet className="w-5 h-5" />
-                  Manage Wallet
-                </span>
-                <ArrowRight className="w-5 h-5" />
-              </Button>
+              <Link to="/donate">
+                <Button variant="secondary" className="w-full justify-between btn-glow" size="lg">
+                  <span className="flex items-center gap-2">
+                    <Heart className="w-5 h-5" />
+                    Make a Donation
+                  </span>
+                  <ArrowRight className="w-5 h-5" />
+                </Button>
+              </Link>
+              <Link to="/schools">
+                <Button variant="secondary" className="w-full justify-between" size="lg">
+                  <span className="flex items-center gap-2">
+                    <Store className="w-5 h-5" />
+                    Browse Schools
+                  </span>
+                  <ArrowRight className="w-5 h-5" />
+                </Button>
+              </Link>
+              <Link to="/other-donations">
+                <Button variant="secondary" className="w-full justify-between" size="lg">
+                  <span className="flex items-center gap-2">
+                    <Wallet className="w-5 h-5" />
+                    View Other Donations
+                  </span>
+                  <ArrowRight className="w-5 h-5" />
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         </div>
@@ -139,9 +145,11 @@ const DonorDashboard = () => {
                   <p className="text-sm text-muted-foreground mb-3">{school.students} students</p>
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Needs: {school.need}</span>
-                    <Button size="sm" className="btn-glow">
-                      Donate
-                    </Button>
+                    <Link to="/donate">
+                      <Button size="sm" className="btn-glow">
+                        Donate
+                      </Button>
+                    </Link>
                   </div>
                 </div>
               ))}
