@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { MapPin, Heart } from "lucide-react";
+import { MapPin, Heart, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ProjectCardProps {
@@ -13,6 +13,7 @@ interface ProjectCardProps {
   amountRaised: number;
   isUrgent?: boolean;
   studentsHelped?: number;
+  schoolId?: string | null;
 }
 
 const ProjectCard = ({
@@ -26,6 +27,7 @@ const ProjectCard = ({
   amountRaised,
   isUrgent = false,
   studentsHelped = 0,
+  schoolId,
 }: ProjectCardProps) => {
   const progress = amountNeeded > 0 ? (amountRaised / amountNeeded) * 100 : 0;
   const remaining = Math.max(0, amountNeeded - amountRaised);
@@ -71,7 +73,19 @@ const ProjectCard = ({
 
         {/* School Info */}
         <div className="mb-4">
-          <p className="font-semibold text-sm">{schoolName}</p>
+          <div className="flex items-center justify-between">
+            <p className="font-semibold text-sm">{schoolName}</p>
+            {schoolId && (
+              <Link 
+                to={`/donate?school=${schoolId}`} 
+                className="text-xs text-primary flex items-center gap-1 hover:underline"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Store className="w-3 h-3" />
+                Store
+              </Link>
+            )}
+          </div>
           <p className="text-muted-foreground text-xs flex items-center gap-1">
             <MapPin className="w-3 h-3" />
             {location}

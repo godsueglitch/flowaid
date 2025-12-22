@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { School, Users, MapPin, Heart, Loader2 } from "lucide-react";
+import { School, Users, MapPin, Heart, Loader2, Store, Package } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -16,6 +16,7 @@ interface SchoolData {
   students_count: number | null;
   total_received: number | null;
   image_url: string | null;
+  products?: { id: string }[];
 }
 
 const Schools = () => {
@@ -31,7 +32,7 @@ const Schools = () => {
   const fetchSchools = async () => {
     const { data, error } = await supabase
       .from("schools")
-      .select("*")
+      .select("*, products(id)")
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -48,8 +49,8 @@ const Schools = () => {
 
       <section className="pt-24 pb-12 gradient-hero">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4">Schools</h1>
-          <p className="text-xl text-white/90">Discover schools making an incredible impact</p>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4">Schools & Stores</h1>
+          <p className="text-xl text-white/90">Support schools directly through their stores</p>
         </div>
       </section>
 
@@ -74,8 +75,14 @@ const Schools = () => {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {schools.map((school) => (
                 <Card key={school.id} className="card-project">
-                  <div className="h-40 gradient-hero flex items-center justify-center">
+                  <div className="h-40 gradient-hero flex items-center justify-center relative">
                     <School className="w-16 h-16 text-white/50" />
+                    {(school.products?.length || 0) > 0 && (
+                      <div className="absolute top-3 right-3 badge-urgent">
+                        <Store className="w-3 h-3 mr-1" />
+                        {school.products?.length} items
+                      </div>
+                    )}
                   </div>
                   <CardHeader>
                     <CardTitle>{school.name}</CardTitle>
@@ -91,19 +98,39 @@ const Schools = () => {
                       </div>
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Users className="w-4 h-4" />
-                        {school.students_count || 0} students
+                        {school.students_count || 0} girls
                       </div>
                     </div>
                     <div className="pt-4 border-t">
-                      <div className="text-sm text-muted-foreground mb-1">Total Received</div>
-                      <div className="text-2xl font-bold text-primary">
-                        ${(school.total_received || 0).toFixed(2)}
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-sm text-muted-foreground mb-1">Total Received</div>
+                          <div className="text-2xl font-bold text-primary">
+                            ${(school.total_received || 0).toFixed(2)}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm text-muted-foreground mb-1">Store Items</div>
+                          <div className="text-2xl font-bold text-accent flex items-center gap-1">
+                            <Package className="w-5 h-5" />
+                            {school.products?.length || 0}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <Button className="w-full btn-primary" onClick={() => navigate("/donate")}>
-                      <Heart className="mr-2 w-4 h-4" />
-                      Support This School
-                    </Button>
+                    <div className="flex gap-2">
+                      <Link to={`/donate?school=${school.id}`} className="flex-1">
+                        <Button className="w-full btn-primary">
+                          <Store className="mr-2 w-4 h-4" />
+                          View Store
+                        </Button>
+                      </Link>
+                      <Link to={`/donate?school=${school.id}`}>
+                        <Button variant="outline" size="icon">
+                          <Heart className="w-4 h-4" />
+                        </Button>
+                      </Link>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
