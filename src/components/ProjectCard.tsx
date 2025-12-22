@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { MapPin, Heart, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import sanitaryPadsImage from "@/assets/products/sanitary-pads.jpg";
+import { getProductImage } from "@/lib/productImages";
 
 interface ProjectCardProps {
   id: string;
@@ -16,6 +16,7 @@ interface ProjectCardProps {
   studentsHelped?: number;
   schoolId?: string | null;
   currency?: string;
+  category?: string;
 }
 
 const ProjectCard = ({
@@ -31,6 +32,7 @@ const ProjectCard = ({
   studentsHelped = 0,
   schoolId,
   currency = "USD",
+  category = "sanitary_pads",
 }: ProjectCardProps) => {
   const progress = amountNeeded > 0 ? (amountRaised / amountNeeded) * 100 : 0;
   const remaining = Math.max(0, amountNeeded - amountRaised);
@@ -42,12 +44,15 @@ const ProjectCard = ({
     return `$${amount.toLocaleString()}`;
   };
 
+  // Get the appropriate image based on product name and category
+  const productImage = getProductImage(title, category, imageUrl);
+
   return (
     <div className="card-project group">
       {/* Image */}
       <div className="relative h-48 overflow-hidden">
         <img
-          src={imageUrl || sanitaryPadsImage}
+          src={productImage}
           alt={title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />

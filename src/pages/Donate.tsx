@@ -325,13 +325,14 @@ const Donate = () => {
                     id={product.id}
                     title={product.name}
                     description={product.description || "Help provide sanitary supplies to girls in need."}
-                    schoolName={product.schools?.name || "School in Need"}
-                    location={product.schools?.location || "Location TBD"}
+                    schoolName={product.schools?.name || "Kenyan School"}
+                    location={product.schools?.location || "Kenya"}
                     imageUrl={product.image_url}
                     amountNeeded={product.price * (product.stock || 100)}
                     amountRaised={product.price * Math.floor((product.stock || 100) * 0.3)}
                     isUrgent={product.is_featured || false}
                     studentsHelped={product.schools?.students_count || 0}
+                    category="sanitary_pads"
                   />
                 </div>
               ))}

@@ -328,7 +328,7 @@ const Home = () => {
                   isUrgent={product.is_featured || false}
                   studentsHelped={product.schools?.students_count || 0}
                   schoolId={product.schools?.id}
-                  currency="USD"
+                  category="sanitary_pads"
                 />
               ))}
             </div>
