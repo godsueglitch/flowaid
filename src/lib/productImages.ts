@@ -12,6 +12,10 @@ import laptopsTablets from "@/assets/products/laptops-tablets.jpg";
 import schoolUniformSet from "@/assets/products/school-uniform-set.jpg";
 import schoolMeals from "@/assets/products/school-meals.jpg";
 import sportsEquipment from "@/assets/products/sports-equipment.jpg";
+import desksChairs from "@/assets/products/desks-chairs.jpg";
+import artSupplies from "@/assets/products/art-supplies.jpg";
+import scienceLab from "@/assets/products/science-lab.jpg";
+import schoolBackpacks from "@/assets/products/school-backpacks.jpg";
 
 // Map product names to their specific images
 const productImageMap: Record<string, string> = {
@@ -100,6 +104,53 @@ const productImageMap: Record<string, string> = {
   "jump rope": sportsEquipment,
   "pe": sportsEquipment,
   "physical education": sportsEquipment,
+  
+  // Furniture - Desks and Chairs
+  "desk": desksChairs,
+  "desks": desksChairs,
+  "chair": desksChairs,
+  "chairs": desksChairs,
+  "table": desksChairs,
+  "tables": desksChairs,
+  "table set": desksChairs,
+  "desk and chair": desksChairs,
+  "desks and chairs": desksChairs,
+  "furniture": desksChairs,
+  "classroom furniture": desksChairs,
+  
+  // Art Supplies
+  "art": artSupplies,
+  "art supplies": artSupplies,
+  "paint": artSupplies,
+  "paints": artSupplies,
+  "painting": artSupplies,
+  "canvas": artSupplies,
+  "brushes": artSupplies,
+  "watercolor": artSupplies,
+  "crayons": artSupplies,
+  "drawing": artSupplies,
+  
+  // Science Lab Equipment
+  "science lab": scienceLab,
+  "lab": scienceLab,
+  "laboratory": scienceLab,
+  "lab equipment": scienceLab,
+  "microscope": scienceLab,
+  "beaker": scienceLab,
+  "beakers": scienceLab,
+  "test tube": scienceLab,
+  "test tubes": scienceLab,
+  "chemistry": scienceLab,
+  "biology": scienceLab,
+  "physics": scienceLab,
+  
+  // Backpacks
+  "backpack": schoolBackpacks,
+  "backpacks": schoolBackpacks,
+  "school bag": schoolBackpacks,
+  "school bags": schoolBackpacks,
+  "bag": schoolBackpacks,
+  "bags": schoolBackpacks,
 };
 
 // Category fallback images
@@ -112,6 +163,10 @@ const categoryImageMap: Record<string, string> = {
   "stationery": stationery,
   "technology": laptopsTablets,
   "sports": sportsEquipment,
+  "furniture": desksChairs,
+  "art": artSupplies,
+  "science": scienceLab,
+  "backpacks": schoolBackpacks,
 };
 
 /**
@@ -165,4 +220,8 @@ export {
   schoolUniformSet,
   schoolMeals,
   sportsEquipment,
+  desksChairs,
+  artSupplies,
+  scienceLab,
+  schoolBackpacks,
 };
