@@ -50,8 +50,8 @@ const Schools = () => {
     setLoading(false);
   };
 
-  const formatKES = (amount: number) => {
-    return `KES ${amount.toLocaleString()}`;
+  const formatUSD = (amount: number) => {
+    return `$${amount.toLocaleString()}`;
   };
 
   return (
@@ -133,7 +133,7 @@ const Schools = () => {
                         <div>
                           <div className="text-sm text-muted-foreground mb-1">Total Received</div>
                           <div className="text-2xl font-bold text-primary">
-                            {formatKES(school.total_received || 0)}
+                            {formatUSD(school.total_received || 0)}
                           </div>
                         </div>
                         <div className="text-right">

@@ -102,8 +102,8 @@ const Home = () => {
     window.location.href = `/donate?${params.toString()}`;
   };
 
-  const formatKES = (amount: number) => {
-    return `KES ${amount.toLocaleString()}`;
+  const formatUSD = (amount: number) => {
+    return `$${amount.toLocaleString()}`;
   };
 
   return (
@@ -202,7 +202,7 @@ const Home = () => {
             </div>
             <div className="text-center">
               <div className="text-4xl font-extrabold text-primary mb-2">
-                {formatKES(stats.totalDonations)}
+                {formatUSD(stats.totalDonations)}
               </div>
               <p className="text-muted-foreground">Total Donated</p>
             </div>
@@ -328,7 +328,7 @@ const Home = () => {
                   isUrgent={product.is_featured || false}
                   studentsHelped={product.schools?.students_count || 0}
                   schoolId={product.schools?.id}
-                  currency="KES"
+                  currency="USD"
                 />
               ))}
             </div>
