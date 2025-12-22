@@ -6,9 +6,12 @@ import carefreLiners from "@/assets/products/carefree-liners.jpg";
 import sanitaryPadsGeneric from "@/assets/products/sanitary-pads.jpg";
 import musicInstruments from "@/assets/products/music-instruments.jpg";
 import stationery from "@/assets/products/stationery.jpg";
-import schoolBooks from "@/assets/products/school-books.jpg";
-import schoolUniform from "@/assets/products/school-uniform.jpg";
+import textbooks from "@/assets/products/textbooks.jpg";
+import libraryBooks from "@/assets/products/library-books.jpg";
+import laptopsTablets from "@/assets/products/laptops-tablets.jpg";
+import schoolUniformSet from "@/assets/products/school-uniform-set.jpg";
 import schoolMeals from "@/assets/products/school-meals.jpg";
+import sportsEquipment from "@/assets/products/sports-equipment.jpg";
 
 // Map product names to their specific images
 const productImageMap: Record<string, string> = {
@@ -26,7 +29,31 @@ const productImageMap: Record<string, string> = {
   "carefree liners": carefreLiners,
   "panty liners": carefreLiners,
   
-  // Other supplies
+  // Books
+  "textbook": textbooks,
+  "textbooks": textbooks,
+  "textbooks set": textbooks,
+  "math": textbooks,
+  "science": textbooks,
+  "english": textbooks,
+  "library": libraryBooks,
+  "library books": libraryBooks,
+  "storybook": libraryBooks,
+  "storybooks": libraryBooks,
+  "reading": libraryBooks,
+  
+  // Technology
+  "laptop": laptopsTablets,
+  "laptops": laptopsTablets,
+  "laptop computer": laptopsTablets,
+  "computer": laptopsTablets,
+  "computers": laptopsTablets,
+  "tablet": laptopsTablets,
+  "tablets": laptopsTablets,
+  "ipad": laptopsTablets,
+  "technology": laptopsTablets,
+  
+  // Music
   "music": musicInstruments,
   "music instruments": musicInstruments,
   "musical instruments": musicInstruments,
@@ -34,39 +61,57 @@ const productImageMap: Record<string, string> = {
   "guitar": musicInstruments,
   "drums": musicInstruments,
   "keyboard": musicInstruments,
+  "piano": musicInstruments,
   
+  // Stationery
   "stationery": stationery,
   "pencils": stationery,
   "pens": stationery,
   "notebooks": stationery,
   "school supplies": stationery,
+  "writing": stationery,
   
-  "books": schoolBooks,
-  "textbooks": schoolBooks,
-  "school books": schoolBooks,
-  "reading books": schoolBooks,
+  // Uniforms
+  "uniform": schoolUniformSet,
+  "uniforms": schoolUniformSet,
+  "school uniform": schoolUniformSet,
+  "school uniforms": schoolUniformSet,
+  "shirt": schoolUniformSet,
+  "skirt": schoolUniformSet,
+  "pants": schoolUniformSet,
   
-  "uniform": schoolUniform,
-  "uniforms": schoolUniform,
-  "school uniform": schoolUniform,
-  "school uniforms": schoolUniform,
-  
+  // Meals/Food
   "meals": schoolMeals,
+  "meal": schoolMeals,
   "food": schoolMeals,
   "lunch": schoolMeals,
   "breakfast": schoolMeals,
   "school meals": schoolMeals,
+  "feeding": schoolMeals,
+  
+  // Sports
+  "sports": sportsEquipment,
+  "sport": sportsEquipment,
+  "sports equipment": sportsEquipment,
+  "basketball": sportsEquipment,
+  "soccer": sportsEquipment,
+  "football": sportsEquipment,
+  "volleyball": sportsEquipment,
+  "jump rope": sportsEquipment,
+  "pe": sportsEquipment,
+  "physical education": sportsEquipment,
 };
 
 // Category fallback images
 const categoryImageMap: Record<string, string> = {
   "sanitary_pads": sanitaryPadsGeneric,
-  "books": schoolBooks,
-  "uniforms": schoolUniform,
+  "books": textbooks,
+  "uniforms": schoolUniformSet,
   "meals": schoolMeals,
   "music": musicInstruments,
   "stationery": stationery,
-  "technology": stationery,
+  "technology": laptopsTablets,
+  "sports": sportsEquipment,
 };
 
 /**
@@ -114,7 +159,10 @@ export {
   sanitaryPadsGeneric,
   musicInstruments,
   stationery,
-  schoolBooks,
-  schoolUniform,
+  textbooks,
+  libraryBooks,
+  laptopsTablets,
+  schoolUniformSet,
   schoolMeals,
+  sportsEquipment,
 };
