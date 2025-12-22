@@ -53,13 +53,13 @@ const Footer = () => {
             <h4 className="font-bold text-lg mb-4">For Schools</h4>
             <ul className="space-y-2">
               <li>
-                <Link to="/auth?type=school" className="text-background/70 hover:text-background transition-colors">
+                <Link to="/register-school" className="text-background/70 hover:text-background transition-colors">
                   Get Started
                 </Link>
               </li>
               <li>
-                <Link to="/school/dashboard" className="text-background/70 hover:text-background transition-colors">
-                  School Dashboard
+                <Link to="/auth?type=school" className="text-background/70 hover:text-background transition-colors">
+                  School Login
                 </Link>
               </li>
             </ul>
@@ -75,7 +75,7 @@ const Footer = () => {
               </li>
               <li className="flex items-center gap-2 text-background/70">
                 <Phone className="w-4 h-4" />
-                <span>+1 (555) 123-4567</span>
+                <span>+254 734 319 033</span>
               </li>
               <li className="flex items-start gap-2 text-background/70">
                 <MapPin className="w-4 h-4 mt-0.5" />
