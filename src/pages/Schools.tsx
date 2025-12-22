@@ -1,23 +1,25 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { School, Users, MapPin, Heart } from "lucide-react";
+import { School, Users, MapPin, Heart, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
-interface School {
+interface SchoolData {
   id: string;
   name: string;
-  description: string;
-  location: string;
-  students_count: number;
-  total_received: number;
+  description: string | null;
+  location: string | null;
+  students_count: number | null;
+  total_received: number | null;
   image_url: string | null;
 }
 
 const Schools = () => {
-  const [schools, setSchools] = useState<School[]>([]);
+  const [schools, setSchools] = useState<SchoolData[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -33,90 +35,84 @@ const Schools = () => {
       .order("created_at", { ascending: false });
 
     if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load schools",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Failed to load schools", variant: "destructive" });
     } else {
       setSchools(data || []);
     }
     setLoading(false);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen p-4 md:p-8">
-      <div className="container mx-auto">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Schools 🏫</h1>
-          <p className="text-muted-foreground text-lg">
-            Discover schools making an incredible impact
-          </p>
-        </div>
+    <div className="min-h-screen">
+      <Navbar />
 
-        {schools.length === 0 ? (
-          <Card className="card-soft text-center py-12">
-            <CardContent>
-              <School className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-2xl font-bold mb-2">No schools yet</h3>
-              <p className="text-muted-foreground mb-6">
-                Be the first to register your school!
-              </p>
-              <Button onClick={() => navigate("/auth")} className="btn-glow">
-                Register as School
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid md:grid-cols-3 gap-6">
-            {schools.map((school) => (
-              <Card key={school.id} className="card-soft hover:shadow-lg transition-shadow">
-                <div className="gradient-blue h-32 flex items-center justify-center">
-                  <School className="w-16 h-16 text-white" />
-                </div>
-                <CardHeader>
-                  <CardTitle>{school.name}</CardTitle>
-                  <CardDescription className="line-clamp-2">
-                    {school.description || "Empowering students through education"}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <MapPin className="w-4 h-4" />
-                      {school.location || "Location not specified"}
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Users className="w-4 h-4" />
-                      {school.students_count} students
-                    </div>
+      <section className="pt-24 pb-12 gradient-hero">
+        <div className="container mx-auto px-4 text-center">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4">Schools</h1>
+          <p className="text-xl text-white/90">Discover schools making an incredible impact</p>
+        </div>
+      </section>
+
+      <section className="py-12">
+        <div className="container mx-auto px-4">
+          {loading ? (
+            <div className="flex justify-center py-20">
+              <Loader2 className="w-12 h-12 animate-spin text-primary" />
+            </div>
+          ) : schools.length === 0 ? (
+            <Card className="text-center py-12 max-w-md mx-auto">
+              <CardContent>
+                <School className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+                <h3 className="text-2xl font-bold mb-2">No schools yet</h3>
+                <p className="text-muted-foreground mb-6">Be the first to register your school!</p>
+                <Button onClick={() => navigate("/auth?type=school")} className="btn-primary">
+                  Register as School
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {schools.map((school) => (
+                <Card key={school.id} className="card-project">
+                  <div className="h-40 gradient-hero flex items-center justify-center">
+                    <School className="w-16 h-16 text-white/50" />
                   </div>
-                  <div className="pt-4 border-t">
-                    <div className="text-sm text-muted-foreground mb-1">
-                      Total Received
+                  <CardHeader>
+                    <CardTitle>{school.name}</CardTitle>
+                    <CardDescription className="line-clamp-2">
+                      {school.description || "Empowering students through education"}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <MapPin className="w-4 h-4" />
+                        {school.location || "Location not specified"}
+                      </div>
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Users className="w-4 h-4" />
+                        {school.students_count || 0} students
+                      </div>
                     </div>
-                    <div className="text-2xl font-bold text-primary">
-                      ${school.total_received.toFixed(2)}
+                    <div className="pt-4 border-t">
+                      <div className="text-sm text-muted-foreground mb-1">Total Received</div>
+                      <div className="text-2xl font-bold text-primary">
+                        ${(school.total_received || 0).toFixed(2)}
+                      </div>
                     </div>
-                  </div>
-                  <Button className="w-full btn-glow" onClick={() => navigate("/donate")}>
-                    <Heart className="mr-2 w-4 h-4" />
-                    Support This School
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
+                    <Button className="w-full btn-primary" onClick={() => navigate("/donate")}>
+                      <Heart className="mr-2 w-4 h-4" />
+                      Support This School
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <Footer />
     </div>
   );
 };
