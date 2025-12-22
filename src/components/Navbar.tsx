@@ -61,7 +61,7 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-full gradient-coral flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full gradient-hero flex items-center justify-center">
               <Heart className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-extrabold text-foreground">

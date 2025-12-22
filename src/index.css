@@ -4,33 +4,33 @@
 @tailwind components;
 @tailwind utilities;
 
-/* DonorsChoose-inspired Design System for FlowAid - Focus on Sanitary Pads */
+/* FlowAid - Pink Feminine Theme for Sanitary Pads Donations */
 
 @layer base {
   :root {
-    /* Primary purple (DonorsChoose inspired) */
-    --background: 0 0% 100%;
-    --foreground: 250 30% 20%;
+    /* Soft pink background */
+    --background: 350 100% 99%;
+    --foreground: 340 50% 20%;
 
     --card: 0 0% 100%;
-    --card-foreground: 250 30% 20%;
+    --card-foreground: 340 50% 20%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 250 30% 20%;
+    --popover-foreground: 340 50% 20%;
 
-    /* Deep purple primary */
-    --primary: 262 83% 58%;
+    /* Primary Pink */
+    --primary: 340 82% 52%;
     --primary-foreground: 0 0% 100%;
 
-    /* Gold/Yellow accent (DonorsChoose style) */
-    --secondary: 45 100% 51%;
-    --secondary-foreground: 250 30% 20%;
+    /* Soft coral accent */
+    --secondary: 350 100% 95%;
+    --secondary-foreground: 340 50% 25%;
 
-    --muted: 250 20% 96%;
-    --muted-foreground: 250 15% 50%;
+    --muted: 350 50% 96%;
+    --muted-foreground: 340 30% 45%;
 
-    /* Coral/Pink accent for sanitary pad focus */
-    --accent: 350 85% 60%;
+    /* Rose accent */
+    --accent: 350 90% 65%;
     --accent-foreground: 0 0% 100%;
 
     /* Success green */
@@ -40,53 +40,53 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 250 20% 90%;
-    --input: 250 20% 90%;
-    --ring: 262 83% 58%;
+    --border: 350 30% 90%;
+    --input: 350 30% 90%;
+    --ring: 340 82% 52%;
 
     --radius: 0.75rem;
 
-    /* Custom gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(262, 83%, 58%) 0%, hsl(280, 80%, 50%) 100%);
-    --gradient-gold: linear-gradient(135deg, hsl(45, 100%, 51%) 0%, hsl(40, 100%, 45%) 100%);
-    --gradient-coral: linear-gradient(135deg, hsl(350, 85%, 60%) 0%, hsl(340, 80%, 55%) 100%);
+    /* Custom pink gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(340, 82%, 52%) 0%, hsl(350, 90%, 65%) 100%);
+    --gradient-soft: linear-gradient(135deg, hsl(350, 100%, 95%) 0%, hsl(340, 80%, 90%) 100%);
+    --gradient-coral: linear-gradient(135deg, hsl(350, 90%, 65%) 0%, hsl(340, 85%, 60%) 100%);
     
     /* Shadows */
-    --shadow-sm: 0 1px 3px hsl(250 30% 20% / 0.1);
-    --shadow-md: 0 4px 12px hsl(250 30% 20% / 0.1);
-    --shadow-lg: 0 10px 40px hsl(250 30% 20% / 0.15);
-    --shadow-glow: 0 0 30px hsl(262 83% 58% / 0.25);
+    --shadow-sm: 0 1px 3px hsl(340 50% 20% / 0.08);
+    --shadow-md: 0 4px 12px hsl(340 50% 20% / 0.1);
+    --shadow-lg: 0 10px 40px hsl(340 50% 20% / 0.12);
+    --shadow-glow: 0 0 30px hsl(340 82% 52% / 0.25);
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 250 30% 20%;
-    --sidebar-primary: 262 83% 58%;
+    --sidebar-foreground: 340 50% 20%;
+    --sidebar-primary: 340 82% 52%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 250 20% 96%;
-    --sidebar-accent-foreground: 250 30% 20%;
-    --sidebar-border: 250 20% 90%;
-    --sidebar-ring: 262 83% 58%;
+    --sidebar-accent: 350 50% 96%;
+    --sidebar-accent-foreground: 340 50% 20%;
+    --sidebar-border: 350 30% 90%;
+    --sidebar-ring: 340 82% 52%;
   }
 
   .dark {
-    --background: 250 30% 8%;
-    --foreground: 0 0% 98%;
+    --background: 340 30% 8%;
+    --foreground: 350 100% 98%;
 
-    --card: 250 25% 12%;
-    --card-foreground: 0 0% 98%;
+    --card: 340 25% 12%;
+    --card-foreground: 350 100% 98%;
 
-    --popover: 250 25% 12%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 340 25% 12%;
+    --popover-foreground: 350 100% 98%;
 
-    --primary: 262 83% 65%;
+    --primary: 340 82% 60%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 45 100% 55%;
-    --secondary-foreground: 250 30% 10%;
+    --secondary: 340 40% 18%;
+    --secondary-foreground: 350 100% 98%;
 
-    --muted: 250 20% 18%;
-    --muted-foreground: 250 15% 65%;
+    --muted: 340 25% 18%;
+    --muted-foreground: 340 30% 65%;
 
-    --accent: 350 85% 65%;
+    --accent: 350 80% 60%;
     --accent-foreground: 0 0% 100%;
 
     --success: 142 76% 42%;
@@ -95,18 +95,18 @@
     --destructive: 0 62% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 250 20% 22%;
-    --input: 250 20% 22%;
-    --ring: 262 83% 65%;
+    --border: 340 25% 22%;
+    --input: 340 25% 22%;
+    --ring: 340 82% 60%;
     
-    --sidebar-background: 250 30% 8%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 262 83% 65%;
+    --sidebar-background: 340 30% 8%;
+    --sidebar-foreground: 350 100% 98%;
+    --sidebar-primary: 340 82% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 250 20% 18%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 250 20% 22%;
-    --sidebar-ring: 262 83% 65%;
+    --sidebar-accent: 340 25% 18%;
+    --sidebar-accent-foreground: 350 100% 98%;
+    --sidebar-border: 340 25% 22%;
+    --sidebar-ring: 340 82% 60%;
   }
 }
 
@@ -132,8 +132,8 @@
     background: var(--gradient-hero);
   }
   
-  .gradient-gold {
-    background: var(--gradient-gold);
+  .gradient-soft {
+    background: var(--gradient-soft);
   }
   
   .gradient-coral {
@@ -201,7 +201,6 @@
     @apply text-primary;
   }
 
-  /* Animate on scroll */
   .animate-on-scroll {
     animation: fadeInUp 0.6s ease-out forwards;
     opacity: 0;

@@ -42,6 +42,8 @@ const Donate = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
+  const [selectedSchoolId, setSelectedSchoolId] = useState<string | null>(searchParams.get("school"));
+  const [selectedSchoolName, setSelectedSchoolName] = useState<string | null>(null);
   
   // Anonymous donor fields
   const [anonEmail, setAnonEmail] = useState("");
@@ -50,7 +52,9 @@ const Donate = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchProducts();
+    const schoolId = searchParams.get("school");
+    setSelectedSchoolId(schoolId);
+    fetchProducts(schoolId);
     checkAuth();
     
     // Check if a specific product was requested
@@ -92,12 +96,28 @@ const Donate = () => {
     }
   };
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (schoolId?: string | null) => {
     let query = supabase
       .from("products")
-      .select("*, schools(name, location, students_count)")
+      .select("*, schools(id, name, location, students_count)")
       .eq("category", "sanitary_pads")
       .order("is_featured", { ascending: false });
+
+    // Filter by school if specified
+    if (schoolId) {
+      query = query.eq("school_id", schoolId);
+      
+      // Fetch school name
+      const { data: school } = await supabase
+        .from("schools")
+        .select("name")
+        .eq("id", schoolId)
+        .single();
+      
+      if (school) {
+        setSelectedSchoolName(school.name);
+      }
+    }
 
     const { data, error } = await query;
 
@@ -248,11 +268,22 @@ const Donate = () => {
       <section className="pt-24 pb-12 gradient-hero">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4">
-            Donate Sanitary Pads
+            {selectedSchoolName ? `${selectedSchoolName}'s Store` : "Donate Sanitary Pads"}
           </h1>
           <p className="text-xl text-white/90 max-w-2xl mx-auto">
-            Help provide essential hygiene products to girls in schools. Every donation keeps a girl in school.
+            {selectedSchoolName 
+              ? `Support ${selectedSchoolName} by donating essential hygiene products.`
+              : "Help provide essential hygiene products to girls in schools. Every donation keeps a girl in school."}
           </p>
+          {selectedSchoolId && (
+            <Button 
+              variant="outline" 
+              className="mt-4 border-white text-white hover:bg-white/10"
+              onClick={() => window.location.href = "/donate"}
+            >
+              View All Schools
+            </Button>
+          )}
         </div>
       </section>
 
