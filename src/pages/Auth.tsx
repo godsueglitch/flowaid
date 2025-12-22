@@ -5,73 +5,183 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Wallet, Heart, School } from "lucide-react";
+import { Wallet, Heart, School, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { z } from "zod";
+
+const emailSchema = z.string().email("Invalid email address").max(255);
+const passwordSchema = z.string().min(6, "Password must be at least 6 characters").max(72);
+const nameSchema = z.string().min(2, "Name must be at least 2 characters").max(100);
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const userType = searchParams.get("type") || "donor";
   const [isLogin, setIsLogin] = useState(true);
-  const [walletConnected, setWalletConnected] = useState(false);
   const [walletAddress, setWalletAddress] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
+  
+  // Form fields
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+
+  useEffect(() => {
+    // Check if user is already logged in
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        // User is logged in, redirect to appropriate dashboard
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", session.user.id)
+          .single();
+        
+        if (profile?.role === "school") {
+          navigate("/school/dashboard");
+        } else {
+          navigate("/donor/dashboard");
+        }
+      }
+      setCheckingSession(false);
+    };
+
+    checkSession();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        // Defer navigation to avoid deadlock
+        setTimeout(async () => {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", session.user.id)
+            .single();
+          
+          if (profile?.role === "school") {
+            navigate("/school/dashboard");
+          } else {
+            navigate("/donor/dashboard");
+          }
+        }, 0);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
   const connectWallet = async () => {
-    // Simulating wallet connection
     const ethereum = (window as any).ethereum;
     if (typeof ethereum !== "undefined") {
       try {
         const accounts = await ethereum.request({ method: "eth_requestAccounts" });
         setWalletAddress(accounts[0]);
-        setWalletConnected(true);
         toast.success("Wallet connected successfully!");
       } catch (error) {
-        toast.error("Failed to connect wallet. Using demo mode.");
-        // Demo mode
-        const demoAddress = "0x" + Math.random().toString(16).substr(2, 40);
-        setWalletAddress(demoAddress);
-        setWalletConnected(true);
+        toast.error("Failed to connect wallet. Please try again.");
       }
     } else {
-      toast.info("MetaMask not detected. Using demo mode.");
-      // Demo mode for users without MetaMask
-      const demoAddress = "0x" + Math.random().toString(16).substr(2, 40);
-      setWalletAddress(demoAddress);
-      setWalletConnected(true);
+      toast.error("MetaMask not detected. Please install MetaMask to connect your wallet.");
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!walletConnected) {
-      toast.error("Please connect your wallet first");
+    
+    // Validate inputs
+    try {
+      emailSchema.parse(email);
+      passwordSchema.parse(password);
+    } catch (error: any) {
+      toast.error(error.errors?.[0]?.message || "Invalid input");
       return;
     }
-    
-    toast.success(`Successfully ${isLogin ? "logged in" : "registered"}!`);
-    
-    // Navigate based on user type
-    if (userType === "donor") {
-      navigate("/donor/dashboard");
-    } else {
-      navigate("/school/dashboard");
+
+    setLoading(true);
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      toast.error(error.message);
+      setLoading(false);
+      return;
     }
+
+    // Update wallet address if connected
+    if (walletAddress && data.user) {
+      await supabase
+        .from("profiles")
+        .update({ wallet_address: walletAddress })
+        .eq("id", data.user.id);
+    }
+
+    toast.success("Logged in successfully!");
   };
 
-  useEffect(() => {
-    // Auto-connect wallet prompt on mount
-    const timer = setTimeout(() => {
-      if (!walletConnected) {
-        toast.info("Connect your wallet to continue", {
-          action: {
-            label: "Connect",
-            onClick: connectWallet,
-          },
-        });
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate inputs
+    try {
+      nameSchema.parse(name);
+      emailSchema.parse(email);
+      passwordSchema.parse(password);
+    } catch (error: any) {
+      toast.error(error.errors?.[0]?.message || "Invalid input");
+      return;
+    }
+
+    setLoading(true);
+
+    const role = userType === "school" ? "school" : "donor";
+    
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/`,
+        data: {
+          full_name: name,
+          role: role,
+        },
+      },
+    });
+
+    if (error) {
+      if (error.message.includes("already registered")) {
+        toast.error("This email is already registered. Please log in instead.");
+      } else {
+        toast.error(error.message);
       }
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [walletConnected]);
+      setLoading(false);
+      return;
+    }
+
+    // Update wallet address if connected
+    if (walletAddress && data.user) {
+      await supabase
+        .from("profiles")
+        .update({ wallet_address: walletAddress })
+        .eq("id", data.user.id);
+    }
+
+    toast.success("Account created successfully!");
+  };
+
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 gradient-mixed">
@@ -101,19 +211,35 @@ const Auth = () => {
             </TabsList>
             
             <TabsContent value="login" className="space-y-4">
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="you@example.com" required />
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    placeholder="you@example.com" 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required 
+                    disabled={loading}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
-                  <Input id="password" type="password" placeholder="••••••••" required />
+                  <Input 
+                    id="password" 
+                    type="password" 
+                    placeholder="••••••••" 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required 
+                    disabled={loading}
+                  />
                 </div>
                 
                 {/* Wallet Connection */}
                 <div className="space-y-3 pt-2">
-                  {walletConnected ? (
+                  {walletAddress ? (
                     <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 flex items-center gap-2">
                       <Wallet className="w-5 h-5 text-primary" />
                       <div className="flex-1 min-w-0">
@@ -127,39 +253,65 @@ const Auth = () => {
                       variant="outline"
                       className="w-full"
                       onClick={connectWallet}
+                      disabled={loading}
                     >
                       <Wallet className="mr-2 w-5 h-5" />
-                      Connect Wallet
+                      Connect Wallet (Optional)
                     </Button>
                   )}
                 </div>
 
-                <Button type="submit" className="w-full btn-glow" size="lg">
+                <Button type="submit" className="w-full btn-glow" size="lg" disabled={loading}>
+                  {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                   Login
                 </Button>
               </form>
             </TabsContent>
             
             <TabsContent value="signup" className="space-y-4">
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSignup} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">
                     {userType === "donor" ? "Full Name" : "School Name"}
                   </Label>
-                  <Input id="name" type="text" placeholder="Enter name" required />
+                  <Input 
+                    id="name" 
+                    type="text" 
+                    placeholder="Enter name" 
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required 
+                    disabled={loading}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">Email</Label>
-                  <Input id="signup-email" type="email" placeholder="you@example.com" required />
+                  <Input 
+                    id="signup-email" 
+                    type="email" 
+                    placeholder="you@example.com" 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required 
+                    disabled={loading}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">Password</Label>
-                  <Input id="signup-password" type="password" placeholder="••••••••" required />
+                  <Input 
+                    id="signup-password" 
+                    type="password" 
+                    placeholder="••••••••" 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required 
+                    disabled={loading}
+                  />
                 </div>
                 
                 {/* Wallet Connection */}
                 <div className="space-y-3 pt-2">
-                  {walletConnected ? (
+                  {walletAddress ? (
                     <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 flex items-center gap-2">
                       <Wallet className="w-5 h-5 text-primary" />
                       <div className="flex-1 min-w-0">
@@ -173,9 +325,10 @@ const Auth = () => {
                       variant="outline"
                       className="w-full"
                       onClick={connectWallet}
+                      disabled={loading}
                     >
                       <Wallet className="mr-2 w-5 h-5" />
-                      Connect Wallet
+                      Connect Wallet (Optional)
                     </Button>
                   )}
                   <p className="text-xs text-muted-foreground text-center">
@@ -183,7 +336,8 @@ const Auth = () => {
                   </p>
                 </div>
 
-                <Button type="submit" className="w-full btn-glow" size="lg">
+                <Button type="submit" className="w-full btn-glow" size="lg" disabled={loading}>
+                  {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                   Create Account
                 </Button>
               </form>
