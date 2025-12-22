@@ -4,15 +4,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Book, Laptop, Heart, ArrowLeft, Package, Wallet, Shirt, Utensils } from "lucide-react";
+import { Book, Laptop, Heart, ArrowLeft, Package, Wallet, Shirt, Utensils, Music } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import schoolBooksImage from "@/assets/products/school-books.jpg";
-import schoolUniformImage from "@/assets/products/school-uniform.jpg";
-import schoolMealsImage from "@/assets/products/school-meals.jpg";
+import { getProductImage } from "@/lib/productImages";
 
 interface Product {
   id: string;
@@ -23,12 +21,6 @@ interface Product {
   category: string;
   image_url: string | null;
 }
-
-const categoryImages: Record<string, string> = {
-  books: schoolBooksImage,
-  uniforms: schoolUniformImage,
-  meals: schoolMealsImage,
-};
 
 const OtherDonations = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -110,7 +102,7 @@ const OtherDonations = () => {
 
       if (error) throw error;
 
-      toast({ title: "Donation Initiated! 💖", description: `Processing KES ${amount.toLocaleString()}` });
+      toast({ title: "Donation Initiated! 💖", description: `Processing $${amount.toLocaleString()}` });
       setShowDonationModal(false);
 
       if (data?.paymentUrl) window.open(data.paymentUrl, "_blank");
@@ -123,12 +115,14 @@ const OtherDonations = () => {
 
   const getCategoryIcon = (category: string) => {
     const icons: Record<string, JSX.Element> = {
-      books: <Book className="w-8 h-8 text-white" />,
-      technology: <Laptop className="w-8 h-8 text-white" />,
-      uniforms: <Shirt className="w-8 h-8 text-white" />,
-      meals: <Utensils className="w-8 h-8 text-white" />,
+      books: <Book className="w-6 h-6 text-white" />,
+      technology: <Laptop className="w-6 h-6 text-white" />,
+      uniforms: <Shirt className="w-6 h-6 text-white" />,
+      meals: <Utensils className="w-6 h-6 text-white" />,
+      music: <Music className="w-6 h-6 text-white" />,
+      stationery: <Book className="w-6 h-6 text-white" />,
     };
-    return icons[category] || <Package className="w-8 h-8 text-white" />;
+    return icons[category] || <Package className="w-6 h-6 text-white" />;
   };
 
   const formatUSD = (amount: number) => `$${amount.toLocaleString()}`;
@@ -154,7 +148,7 @@ const OtherDonations = () => {
           <div className="text-center">
             <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4">Other School Supplies 📚</h1>
             <p className="text-xl text-white/90 max-w-2xl mx-auto">
-              Support Kenyan schools with books, uniforms, meals and technology
+              Support Kenyan schools with books, uniforms, meals, music instruments and more
             </p>
           </div>
         </div>
@@ -177,13 +171,16 @@ const OtherDonations = () => {
           ) : (
             <div className="grid md:grid-cols-3 gap-6">
               {products.map((product) => (
-                <Card key={product.id} className="card-project">
-                  <div className="h-32 overflow-hidden">
+                <Card key={product.id} className="card-project overflow-hidden">
+                  <div className="h-40 overflow-hidden relative">
                     <img 
-                      src={product.image_url || categoryImages[product.category] || schoolBooksImage}
+                      src={getProductImage(product.name, product.category, product.image_url)}
                       alt={product.name}
                       className="w-full h-full object-cover"
                     />
+                    <div className="absolute top-3 left-3 w-10 h-10 rounded-full gradient-hero flex items-center justify-center">
+                      {getCategoryIcon(product.category)}
+                    </div>
                   </div>
                   <CardHeader>
                     <CardTitle>{product.name}</CardTitle>
