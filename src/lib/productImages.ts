@@ -189,9 +189,14 @@ export const getProductImage = (
   // Normalize the product name for matching
   const normalizedName = productName.toLowerCase().trim();
 
+  // Prefer more specific (longer) matches first to avoid collisions like "science" vs "science lab"
+  const sortedEntries = Object.entries(productImageMap).sort(
+    ([a], [b]) => b.length - a.length
+  );
+
   // Check for exact or partial matches in product name
-  for (const [key, image] of Object.entries(productImageMap)) {
-    if (normalizedName.includes(key) || key.includes(normalizedName)) {
+  for (const [key, image] of sortedEntries) {
+    if (normalizedName.includes(key)) {
       return image;
     }
   }
