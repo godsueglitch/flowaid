@@ -23,6 +23,8 @@ const SchoolRegistration = () => {
     contactName: "",
     phone: "",
     email: "",
+    password: "",
+    confirmPassword: "",
     description: "",
     walletAddress: "",
   });
@@ -36,14 +38,34 @@ const SchoolRegistration = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (formData.password !== formData.confirmPassword) {
+      toast({
+        title: "Passwords don't match",
+        description: "Please make sure your passwords match.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      toast({
+        title: "Password too short",
+        description: "Password must be at least 6 characters.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
       // First create a user account for the school
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
-        password: Math.random().toString(36).slice(-12), // Temporary password
+        password: formData.password,
         options: {
+          emailRedirectTo: `${window.location.origin}/auth`,
           data: {
             full_name: formData.contactName,
             role: 'school'
@@ -280,6 +302,42 @@ const SchoolRegistration = () => {
                       required
                     />
                   </div>
+                </div>
+
+                {/* Password */}
+                <div className="pt-4 border-t">
+                  <h3 className="font-semibold mb-4">Create Login Password</h3>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="password">Password *</Label>
+                      <Input
+                        id="password"
+                        name="password"
+                        type="password"
+                        placeholder="Min 6 characters"
+                        value={formData.password}
+                        onChange={handleChange}
+                        required
+                        minLength={6}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword">Confirm Password *</Label>
+                      <Input
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        type="password"
+                        placeholder="Re-enter password"
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        required
+                        minLength={6}
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    You'll use this password to log in to your school dashboard
+                  </p>
                 </div>
 
                 {/* Description */}
