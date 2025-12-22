@@ -143,7 +143,7 @@ const SchoolDashboard = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1 p-4 md:p-8">
+      <main className="flex-1 pt-20 p-4 md:pt-24 md:p-8">
         <div className="container mx-auto">
           {/* Header */}
           <div className="mb-8">

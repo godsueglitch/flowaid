@@ -14,6 +14,7 @@ import {
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [dashboardPath, setDashboardPath] = useState("/donor/dashboard");
   const [scrolled, setScrolled] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -37,6 +38,32 @@ const Navbar = () => {
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const resolveDashboard = async () => {
+      if (!user?.id) {
+        if (!cancelled) setDashboardPath("/donor/dashboard");
+        return;
+      }
+
+      const { data: school } = await supabase
+        .from("schools")
+        .select("id")
+        .eq("profile_id", user.id)
+        .maybeSingle();
+
+      if (!cancelled) {
+        setDashboardPath(school ? "/school/dashboard" : "/donor/dashboard");
+      }
+    };
+
+    resolveDashboard();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -93,7 +120,7 @@ const Navbar = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => navigate("/donor/dashboard")}>
+                  <DropdownMenuItem onClick={() => navigate(dashboardPath)}>
                     My Dashboard
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -145,7 +172,7 @@ const Navbar = () => {
               <div className="flex flex-col gap-2 pt-4 border-t border-border">
                 {user ? (
                   <>
-                    <Link to="/donor/dashboard" onClick={() => setIsMenuOpen(false)}>
+                    <Link to={dashboardPath} onClick={() => setIsMenuOpen(false)}>
                       <Button variant="outline" className="w-full">
                         My Dashboard
                       </Button>

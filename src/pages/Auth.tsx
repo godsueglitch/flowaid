@@ -29,44 +29,42 @@ const Auth = () => {
   const [name, setName] = useState("");
 
   useEffect(() => {
+    const resolveDashboardPath = async (userId: string) => {
+      // Determine if this user has a school record (do NOT rely on profile.role)
+      const { data: school } = await supabase
+        .from("schools")
+        .select("id")
+        .eq("profile_id", userId)
+        .maybeSingle();
+
+      return school ? "/school/dashboard" : "/donor/dashboard";
+    };
+
     // Check if user is already logged in
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       if (session) {
-        // User is logged in, redirect to appropriate dashboard
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", session.user.id)
-          .single();
-        
-        if (profile?.role === "school") {
-          navigate("/school/dashboard");
-        } else {
-          navigate("/donor/dashboard");
-        }
+        const path = await resolveDashboardPath(session.user.id);
+        navigate(path);
+        return;
       }
+
       setCheckingSession(false);
     };
 
     checkSession();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session) {
         // Defer navigation to avoid deadlock
-        setTimeout(async () => {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("role")
-            .eq("id", session.user.id)
-            .single();
-          
-          if (profile?.role === "school") {
-            navigate("/school/dashboard");
-          } else {
-            navigate("/donor/dashboard");
-          }
+        setTimeout(() => {
+          resolveDashboardPath(session.user.id).then((path) => navigate(path));
         }, 0);
       }
     });
@@ -140,8 +138,6 @@ const Auth = () => {
 
     setLoading(true);
 
-    const role = userType === "school" ? "school" : "donor";
-    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -149,7 +145,6 @@ const Auth = () => {
         emailRedirectTo: `${window.location.origin}/`,
         data: {
           full_name: name,
-          role: role,
         },
       },
     });
