@@ -30,7 +30,7 @@ const ProjectCard = ({
   isUrgent = false,
   studentsHelped = 0,
   schoolId,
-  currency = "KES",
+  currency = "USD",
 }: ProjectCardProps) => {
   const progress = amountNeeded > 0 ? (amountRaised / amountNeeded) * 100 : 0;
   const remaining = Math.max(0, amountNeeded - amountRaised);

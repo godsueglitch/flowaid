@@ -131,7 +131,7 @@ const OtherDonations = () => {
     return icons[category] || <Package className="w-8 h-8 text-white" />;
   };
 
-  const formatKES = (amount: number) => `KES ${amount.toLocaleString()}`;
+  const formatUSD = (amount: number) => `$${amount.toLocaleString()}`;
 
   if (loading) {
     return (
@@ -191,7 +191,7 @@ const OtherDonations = () => {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <span className="text-2xl font-bold text-primary">{formatKES(product.price)}</span>
+                      <span className="text-2xl font-bold text-primary">{formatUSD(product.price)}</span>
                       <span className="text-sm text-muted-foreground">{product.stock} available</span>
                     </div>
                     <Button className="w-full btn-primary" onClick={() => handleDonateClick(product)} disabled={product.stock === 0}>
@@ -225,16 +225,16 @@ const OtherDonations = () => {
               <div className="space-y-2">
                 <Label>Quantity</Label>
                 <Input type="number" min="1" max={selectedProduct.stock} value={quantity} onChange={(e) => { setQuantity(Math.max(1, parseInt(e.target.value) || 1)); setCustomAmount(""); }} />
-                <p className="text-sm text-muted-foreground">{formatKES(selectedProduct.price)} each = {formatKES(selectedProduct.price * quantity)} total</p>
+                <p className="text-sm text-muted-foreground">{formatUSD(selectedProduct.price)} each = {formatUSD(selectedProduct.price * quantity)} total</p>
               </div>
               <div className="space-y-2">
-                <Label>Or Custom Amount (KES)</Label>
+                <Label>Or Custom Amount (USD)</Label>
                 <Input type="number" placeholder="Enter amount" value={customAmount} onChange={(e) => setCustomAmount(e.target.value)} />
               </div>
               <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
                 <div className="flex items-center justify-between">
                   <span className="font-medium">Total:</span>
-                  <span className="text-2xl font-bold text-primary">{formatKES(customAmount ? parseFloat(customAmount) : selectedProduct.price * quantity)}</span>
+                  <span className="text-2xl font-bold text-primary">{formatUSD(customAmount ? parseFloat(customAmount) : selectedProduct.price * quantity)}</span>
                 </div>
               </div>
               <div className="flex gap-3">
