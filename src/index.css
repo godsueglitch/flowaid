@@ -1,97 +1,112 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* DonorsChoose-inspired Design System for FlowAid - Focus on Sanitary Pads */
 
 @layer base {
   :root {
-    --background: 333 100% 98%;
-    --foreground: 340 80% 25%;
+    /* Primary purple (DonorsChoose inspired) */
+    --background: 0 0% 100%;
+    --foreground: 250 30% 20%;
 
     --card: 0 0% 100%;
-    --card-foreground: 340 80% 25%;
+    --card-foreground: 250 30% 20%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 340 80% 25%;
+    --popover-foreground: 250 30% 20%;
 
-    --primary: 340 82% 70%;
+    /* Deep purple primary */
+    --primary: 262 83% 58%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 195 50% 85%;
-    --secondary-foreground: 340 80% 25%;
+    /* Gold/Yellow accent (DonorsChoose style) */
+    --secondary: 45 100% 51%;
+    --secondary-foreground: 250 30% 20%;
 
-    --muted: 333 60% 95%;
-    --muted-foreground: 340 30% 55%;
+    --muted: 250 20% 96%;
+    --muted-foreground: 250 15% 50%;
 
-    --accent: 195 65% 75%;
-    --accent-foreground: 340 80% 25%;
+    /* Coral/Pink accent for sanitary pad focus */
+    --accent: 350 85% 60%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
+    /* Success green */
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 333 40% 92%;
-    --input: 333 40% 92%;
-    --ring: 340 82% 70%;
+    --border: 250 20% 90%;
+    --input: 250 20% 90%;
+    --ring: 262 83% 58%;
 
-    --radius: 1rem;
+    --radius: 0.75rem;
 
-    --gradient-pink: linear-gradient(135deg, hsl(340, 82%, 85%), hsl(340, 82%, 70%));
-    --gradient-blue: linear-gradient(135deg, hsl(195, 65%, 85%), hsl(195, 65%, 75%));
-    --gradient-mixed: linear-gradient(135deg, hsl(340, 82%, 85%), hsl(195, 65%, 85%));
+    /* Custom gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(262, 83%, 58%) 0%, hsl(280, 80%, 50%) 100%);
+    --gradient-gold: linear-gradient(135deg, hsl(45, 100%, 51%) 0%, hsl(40, 100%, 45%) 100%);
+    --gradient-coral: linear-gradient(135deg, hsl(350, 85%, 60%) 0%, hsl(340, 80%, 55%) 100%);
     
-    --shadow-soft: 0 4px 20px -2px hsl(340 82% 70% / 0.15);
-    --shadow-glow: 0 0 30px hsl(340 82% 70% / 0.2);
+    /* Shadows */
+    --shadow-sm: 0 1px 3px hsl(250 30% 20% / 0.1);
+    --shadow-md: 0 4px 12px hsl(250 30% 20% / 0.1);
+    --shadow-lg: 0 10px 40px hsl(250 30% 20% / 0.15);
+    --shadow-glow: 0 0 30px hsl(262 83% 58% / 0.25);
 
-    --sidebar-background: 333 100% 98%;
-    --sidebar-foreground: 340 80% 25%;
-    --sidebar-primary: 340 82% 70%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 250 30% 20%;
+    --sidebar-primary: 262 83% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 333 60% 95%;
-    --sidebar-accent-foreground: 340 80% 25%;
-    --sidebar-border: 333 40% 92%;
-    --sidebar-ring: 340 82% 70%;
+    --sidebar-accent: 250 20% 96%;
+    --sidebar-accent-foreground: 250 30% 20%;
+    --sidebar-border: 250 20% 90%;
+    --sidebar-ring: 262 83% 58%;
   }
 
   .dark {
-    --background: 340 50% 8%;
-    --foreground: 333 100% 98%;
+    --background: 250 30% 8%;
+    --foreground: 0 0% 98%;
 
-    --card: 340 45% 12%;
-    --card-foreground: 333 100% 98%;
+    --card: 250 25% 12%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 340 45% 12%;
-    --popover-foreground: 333 100% 98%;
+    --popover: 250 25% 12%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 340 82% 70%;
+    --primary: 262 83% 65%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 195 50% 30%;
-    --secondary-foreground: 333 100% 98%;
+    --secondary: 45 100% 55%;
+    --secondary-foreground: 250 30% 10%;
 
-    --muted: 340 40% 15%;
-    --muted-foreground: 333 60% 70%;
+    --muted: 250 20% 18%;
+    --muted-foreground: 250 15% 65%;
 
-    --accent: 195 65% 40%;
-    --accent-foreground: 333 100% 98%;
+    --accent: 350 85% 65%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 62.8% 50%;
-    --destructive-foreground: 333 100% 98%;
+    --success: 142 76% 42%;
+    --success-foreground: 0 0% 100%;
 
-    --border: 340 40% 20%;
-    --input: 340 40% 20%;
-    --ring: 340 82% 70%;
+    --destructive: 0 62% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 250 20% 22%;
+    --input: 250 20% 22%;
+    --ring: 262 83% 65%;
     
-    --sidebar-background: 340 50% 8%;
-    --sidebar-foreground: 333 100% 98%;
-    --sidebar-primary: 340 82% 70%;
+    --sidebar-background: 250 30% 8%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 262 83% 65%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 340 40% 15%;
-    --sidebar-accent-foreground: 333 100% 98%;
-    --sidebar-border: 340 40% 20%;
-    --sidebar-ring: 340 82% 70%;
+    --sidebar-accent: 250 20% 18%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 250 20% 22%;
+    --sidebar-ring: 262 83% 65%;
   }
 }
 
@@ -102,39 +117,104 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-weight: 700;
-    letter-spacing: -0.02em;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.01em;
   }
 }
 
 @layer components {
-  .gradient-pink {
-    background: var(--gradient-pink);
+  .gradient-hero {
+    background: var(--gradient-hero);
   }
   
-  .gradient-blue {
-    background: var(--gradient-blue);
+  .gradient-gold {
+    background: var(--gradient-gold);
   }
   
-  .gradient-mixed {
-    background: var(--gradient-mixed);
+  .gradient-coral {
+    background: var(--gradient-coral);
   }
 
-  .card-soft {
-    @apply rounded-2xl bg-card shadow-[0_4px_20px_-2px_hsl(340_82%_70%_/_0.15)] border border-border/50;
+  .card-project {
+    @apply rounded-xl bg-card shadow-md border border-border/30 overflow-hidden transition-all duration-300;
   }
 
-  .btn-glow {
+  .card-project:hover {
+    @apply shadow-lg;
+    transform: translateY(-4px);
+  }
+
+  .btn-primary {
+    @apply bg-primary text-primary-foreground font-semibold rounded-full px-6 py-3 transition-all duration-200;
+  }
+
+  .btn-primary:hover {
+    @apply opacity-90;
+    transform: translateY(-1px);
     box-shadow: var(--shadow-glow);
-    transition: all 0.3s ease;
   }
 
-  .btn-glow:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 40px hsl(340 82% 70% / 0.3);
+  .btn-secondary {
+    @apply bg-secondary text-secondary-foreground font-bold rounded-full px-6 py-3 transition-all duration-200;
+  }
+
+  .btn-secondary:hover {
+    @apply opacity-90;
+    transform: translateY(-1px);
+  }
+
+  .progress-bar {
+    @apply h-2 rounded-full bg-muted overflow-hidden;
+  }
+
+  .progress-bar-fill {
+    @apply h-full rounded-full transition-all duration-500;
+    background: var(--gradient-coral);
+  }
+
+  .badge-urgent {
+    @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-bold;
+    background: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
+  }
+
+  .badge-success {
+    @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-bold;
+    background: hsl(var(--success));
+    color: hsl(var(--success-foreground));
+  }
+
+  .search-box {
+    @apply flex items-center bg-card rounded-lg shadow-md border border-border/50 overflow-hidden;
+  }
+
+  .nav-link {
+    @apply text-foreground/80 font-semibold hover:text-primary transition-colors;
+  }
+
+  .nav-link.active {
+    @apply text-primary;
+  }
+
+  /* Animate on scroll */
+  .animate-on-scroll {
+    animation: fadeInUp 0.6s ease-out forwards;
+    opacity: 0;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }

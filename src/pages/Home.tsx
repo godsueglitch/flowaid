@@ -1,36 +1,282 @@
-import { Button } from "@/components/ui/button";
-import { ArrowRight, Heart, School, Store, Wallet, TrendingUp } from "lucide-react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Heart, Search, MapPin, ArrowRight, Users, School, Package, CheckCircle, Star } from "lucide-react";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import ProjectCard from "@/components/ProjectCard";
+import { supabase } from "@/integrations/supabase/client";
+
+interface Product {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  stock: number | null;
+  image_url: string | null;
+  is_featured: boolean | null;
+  school_id: string | null;
+  schools?: {
+    name: string;
+    location: string | null;
+    students_count: number | null;
+  } | null;
+}
+
+interface Stats {
+  totalDonations: number;
+  totalSchools: number;
+  totalGirls: number;
+  totalProducts: number;
+}
 
 const Home = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [locationQuery, setLocationQuery] = useState("");
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [urgentProducts, setUrgentProducts] = useState<Product[]>([]);
+  const [stats, setStats] = useState<Stats>({ totalDonations: 0, totalSchools: 0, totalGirls: 0, totalProducts: 0 });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    // Fetch featured products
+    const { data: featured } = await supabase
+      .from("products")
+      .select("*, schools(name, location, students_count)")
+      .eq("is_featured", true)
+      .eq("category", "sanitary_pads")
+      .limit(3);
+
+    // Fetch all sanitary pad products for urgent section
+    const { data: urgent } = await supabase
+      .from("products")
+      .select("*, schools(name, location, students_count)")
+      .eq("category", "sanitary_pads")
+      .order("stock", { ascending: true })
+      .limit(6);
+
+    // Fetch stats
+    const { data: schools } = await supabase.from("schools").select("students_count");
+    const { data: donations } = await supabase.from("donations").select("amount").eq("status", "completed");
+    const { data: products } = await supabase.from("products").select("id").eq("category", "sanitary_pads");
+
+    const totalGirls = schools?.reduce((acc, s) => acc + (s.students_count || 0), 0) || 0;
+    const totalDonations = donations?.reduce((acc, d) => acc + (d.amount || 0), 0) || 0;
+
+    setStats({
+      totalDonations,
+      totalSchools: schools?.length || 0,
+      totalGirls,
+      totalProducts: products?.length || 0,
+    });
+
+    setFeaturedProducts(featured || []);
+    setUrgentProducts(urgent || []);
+    setLoading(false);
+  };
+
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    if (searchQuery) params.set("q", searchQuery);
+    if (locationQuery) params.set("location", locationQuery);
+    window.location.href = `/donate?${params.toString()}`;
+  };
+
   return (
     <div className="min-h-screen">
+      <Navbar />
+
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-20 px-4 md:py-32">
-        <div className="absolute inset-0 gradient-mixed opacity-30" />
-        <div className="container mx-auto relative z-10">
-          <div className="max-w-4xl mx-auto text-center animate-fade-in">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
-              <Heart className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium text-primary">Empowering Education Through Giving</span>
+      <section className="relative pt-16">
+        <div className="grid lg:grid-cols-2 min-h-[600px]">
+          {/* Image Side */}
+          <div className="relative hidden lg:block">
+            <div 
+              className="absolute inset-0 bg-cover bg-center"
+              style={{
+                backgroundImage: `url('https://images.unsplash.com/photo-1509062522246-3755977927d7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80')`,
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent to-primary/20" />
             </div>
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
-              FlowAid
-            </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground mb-8 leading-relaxed">
-              Connect your wallet, make a difference. Support schools and watch your impact grow in real-time.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/auth?type=donor">
-                <Button size="lg" className="btn-glow group">
-                  Donate Now
-                  <Heart className="ml-2 w-5 h-5 group-hover:scale-110 transition-transform" />
+          </div>
+
+          {/* Content Side */}
+          <div className="gradient-hero flex items-center">
+            <div className="px-8 lg:px-16 py-20 max-w-2xl">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-6 leading-tight">
+                Choose girls.
+                <br />
+                <span className="text-secondary">Shape the future.</span>
+              </h1>
+              <p className="text-xl text-white/90 mb-8 leading-relaxed">
+                Girls need sanitary pads to stay in school. Support a school in your community, or beyond, so every girl has the supplies to succeed.
+              </p>
+              <Link to="/donate">
+                <Button size="lg" className="btn-secondary text-lg px-8 py-6">
+                  See school projects
                 </Button>
               </Link>
+              <p className="text-white/70 text-sm mt-6 flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-secondary" />
+                100% of donations go directly to schools
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Search Bar */}
+        <div className="container mx-auto px-4 -mt-8 relative z-10">
+          <div className="search-box p-2 max-w-4xl mx-auto">
+            <div className="flex-1 flex items-center gap-2 px-4">
+              <Search className="w-5 h-5 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search schools or supplies..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="border-0 shadow-none focus-visible:ring-0"
+              />
+            </div>
+            <div className="hidden md:flex items-center gap-2 px-4 border-l border-border">
+              <MapPin className="w-5 h-5 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="City or region"
+                value={locationQuery}
+                onChange={(e) => setLocationQuery(e.target.value)}
+                className="border-0 shadow-none focus-visible:ring-0"
+              />
+            </div>
+            <Button onClick={handleSearch} className="btn-primary">
+              Search
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-16 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="text-center">
+              <div className="text-4xl font-extrabold text-primary mb-2">
+                {stats.totalGirls.toLocaleString()}+
+              </div>
+              <p className="text-muted-foreground">Girls Supported</p>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl font-extrabold text-accent mb-2">
+                {stats.totalSchools}
+              </div>
+              <p className="text-muted-foreground">Schools Reached</p>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl font-extrabold text-primary mb-2">
+                ${stats.totalDonations.toLocaleString()}
+              </div>
+              <p className="text-muted-foreground">Total Donated</p>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl font-extrabold text-secondary mb-2">
+                {stats.totalProducts}
+              </div>
+              <p className="text-muted-foreground">Active Projects</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Most Urgent Projects */}
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-extrabold text-accent mb-4">
+              Most urgent projects
+            </h2>
+            <p className="text-muted-foreground uppercase tracking-wide text-sm font-semibold">
+              HIGHEST NEED • CLOSEST TO GOAL • FEWEST DAYS LEFT
+            </p>
+          </div>
+
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+            </div>
+          ) : urgentProducts.length > 0 ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {urgentProducts.map((product) => (
+                <ProjectCard
+                  key={product.id}
+                  id={product.id}
+                  title={product.name}
+                  description={product.description || "Help provide sanitary supplies to girls in need."}
+                  schoolName={product.schools?.name || "School in Need"}
+                  location={product.schools?.location || "Location TBD"}
+                  imageUrl={product.image_url}
+                  amountNeeded={product.price * (product.stock || 100)}
+                  amountRaised={product.price * Math.floor((product.stock || 100) * 0.3)}
+                  isUrgent={true}
+                  studentsHelped={product.schools?.students_count || 0}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 bg-muted/30 rounded-2xl">
+              <Package className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-xl font-bold mb-2">No projects yet</h3>
+              <p className="text-muted-foreground mb-6">
+                Be the first to register a school and create a project!
+              </p>
               <Link to="/auth?type=school">
-                <Button size="lg" variant="outline" className="group">
-                  Register School
-                  <School className="ml-2 w-5 h-5 group-hover:scale-110 transition-transform" />
+                <Button className="btn-primary">
+                  Register Your School
+                </Button>
+              </Link>
+            </div>
+          )}
+
+          <div className="text-center mt-12">
+            <Link to="/donate">
+              <Button variant="outline" size="lg" className="rounded-full">
+                See all projects
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Primary Focus - Sanitary Pads */}
+      <section className="py-20 gradient-coral">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center text-white">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 mb-6">
+              <Star className="w-4 h-4" />
+              <span className="text-sm font-semibold">Our Primary Mission</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-extrabold mb-6">
+              Donate Sanitary Pads
+            </h2>
+            <p className="text-xl text-white/90 mb-8 leading-relaxed">
+              Millions of girls miss school every month due to lack of menstrual hygiene products. 
+              Your donation provides dignity, health, and education to girls who need it most.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link to="/donate">
+                <Button size="lg" variant="secondary" className="text-lg px-8 py-6 font-bold">
+                  <Heart className="mr-2 w-5 h-5" />
+                  Donate Pads Now
+                </Button>
+              </Link>
+              <Link to="/schools">
+                <Button size="lg" variant="outline" className="text-lg px-8 py-6 border-white text-white hover:bg-white/10">
+                  View Schools
                 </Button>
               </Link>
             </div>
@@ -38,70 +284,78 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-20 px-4 bg-muted/30">
-        <div className="container mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-16">How It Works</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+      {/* How It Works */}
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <h2 className="text-4xl font-extrabold text-center mb-16">How It Works</h2>
+          <div className="grid md:grid-cols-4 gap-8">
             {[
               {
-                icon: Wallet,
-                title: "Connect Wallet",
-                description: "Link your crypto wallet securely during registration or donation",
-                color: "text-primary"
+                icon: Search,
+                title: "Find a School",
+                description: "Browse schools in need of sanitary supplies and educational materials.",
               },
               {
                 icon: Heart,
-                title: "Choose a School",
-                description: "Browse schools in need and select where you want to make an impact",
-                color: "text-accent"
+                title: "Make a Donation",
+                description: "Choose your donation amount. 100% goes directly to the school.",
               },
               {
-                icon: Store,
-                title: "Shop or Donate",
-                description: "Purchase from school stores or make direct donations",
-                color: "text-primary"
+                icon: Package,
+                title: "Supplies Delivered",
+                description: "We ensure supplies reach schools quickly and safely.",
               },
               {
-                icon: TrendingUp,
-                title: "Track Impact",
-                description: "Watch real-time updates on how your contribution helps",
-                color: "text-accent"
-              }
-            ].map((feature, i) => (
-              <div 
-                key={i} 
-                className="card-soft p-6 hover:scale-105 transition-transform duration-300"
-                style={{ animationDelay: `${i * 0.1}s` }}
-              >
-                <div className={`w-14 h-14 rounded-2xl gradient-pink flex items-center justify-center mb-4`}>
-                  <feature.icon className={`w-7 h-7 ${feature.color}`} />
+                icon: Users,
+                title: "Track Your Impact",
+                description: "See real-time updates on how your donation helps girls stay in school.",
+              },
+            ].map((step, i) => (
+              <div key={i} className="text-center">
+                <div className="w-16 h-16 rounded-full gradient-hero mx-auto mb-4 flex items-center justify-center">
+                  <step.icon className="w-7 h-7 text-white" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-                <p className="text-muted-foreground">{feature.description}</p>
+                <h3 className="text-xl font-bold mb-2">{step.title}</h3>
+                <p className="text-muted-foreground">{step.description}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 px-4">
-        <div className="container mx-auto">
-          <div className="card-soft p-12 gradient-mixed text-center">
-            <h2 className="text-4xl font-bold mb-4 text-white">Ready to Make a Difference?</h2>
-            <p className="text-lg mb-8 text-white/90 max-w-2xl mx-auto">
-              Join thousands of donors supporting schools worldwide. Every contribution counts.
-            </p>
-            <Link to="/auth?type=donor">
-              <Button size="lg" variant="secondary" className="btn-glow group">
-                Get Started
-                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </Link>
+      {/* For Schools CTA */}
+      <section className="py-20 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <h2 className="text-4xl font-extrabold mb-6">
+                Are you a school administrator?
+              </h2>
+              <p className="text-xl text-muted-foreground mb-8">
+                Register your school to receive donations of sanitary pads and other essential supplies. 
+                Join our network of schools empowering girls through education.
+              </p>
+              <Link to="/auth?type=school">
+                <Button size="lg" className="btn-primary text-lg px-8 py-6">
+                  <School className="mr-2 w-5 h-5" />
+                  Register Your School
+                </Button>
+              </Link>
+            </div>
+            <div className="relative">
+              <div className="rounded-2xl overflow-hidden shadow-lg">
+                <img
+                  src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                  alt="Students in classroom"
+                  className="w-full h-80 object-cover"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </section>
+
+      <Footer />
     </div>
   );
 };
