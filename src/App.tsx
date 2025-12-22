@@ -11,6 +11,7 @@ import NotFound from "./pages/NotFound";
 import Donate from "./pages/Donate";
 import OtherDonations from "./pages/OtherDonations";
 import Schools from "./pages/Schools";
+import SchoolRegistration from "./pages/SchoolRegistration";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/donate" element={<Donate />} />
           <Route path="/other-donations" element={<OtherDonations />} />
           <Route path="/schools" element={<Schools />} />
+          <Route path="/register-school" element={<SchoolRegistration />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

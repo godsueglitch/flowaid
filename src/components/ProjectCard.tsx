@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { MapPin, Heart, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import sanitaryPadsImage from "@/assets/products/sanitary-pads.jpg";
 
 interface ProjectCardProps {
   id: string;
@@ -14,6 +15,7 @@ interface ProjectCardProps {
   isUrgent?: boolean;
   studentsHelped?: number;
   schoolId?: string | null;
+  currency?: string;
 }
 
 const ProjectCard = ({
@@ -28,25 +30,27 @@ const ProjectCard = ({
   isUrgent = false,
   studentsHelped = 0,
   schoolId,
+  currency = "KES",
 }: ProjectCardProps) => {
   const progress = amountNeeded > 0 ? (amountRaised / amountNeeded) * 100 : 0;
   const remaining = Math.max(0, amountNeeded - amountRaised);
+
+  const formatAmount = (amount: number) => {
+    if (currency === "KES") {
+      return `KES ${amount.toLocaleString()}`;
+    }
+    return `$${amount.toLocaleString()}`;
+  };
 
   return (
     <div className="card-project group">
       {/* Image */}
       <div className="relative h-48 overflow-hidden">
-        {imageUrl ? (
-          <img
-            src={imageUrl}
-            alt={title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          />
-        ) : (
-          <div className="w-full h-full gradient-hero flex items-center justify-center">
-            <Heart className="w-16 h-16 text-white/50" />
-          </div>
-        )}
+        <img
+          src={imageUrl || sanitaryPadsImage}
+          alt={title}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+        />
         
         {/* Urgent Badge */}
         {isUrgent && (
@@ -105,7 +109,7 @@ const ProjectCard = ({
         {/* Stats */}
         <div className="flex items-center justify-between mb-4">
           <div>
-            <p className="text-lg font-bold text-accent">${remaining.toFixed(0)}</p>
+            <p className="text-lg font-bold text-accent">{formatAmount(remaining)}</p>
             <p className="text-xs text-muted-foreground">still needed</p>
           </div>
           {studentsHelped > 0 && (
