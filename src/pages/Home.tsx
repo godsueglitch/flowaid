@@ -2,11 +2,15 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Heart, Search, MapPin, ArrowRight, Users, School, Package, CheckCircle, Star, Store } from "lucide-react";
+import { Heart, Search, MapPin, ArrowRight, Users, School, Package, CheckCircle, Star, Store, Plus } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProjectCard from "@/components/ProjectCard";
 import { supabase } from "@/integrations/supabase/client";
+import kenyaSchool1 from "@/assets/schools/kenya-school-1.jpg";
+import kenyaSchool2 from "@/assets/schools/kenya-school-2.jpg";
+import kenyaSchool3 from "@/assets/schools/kenya-school-3.jpg";
+import kenyaSchool4 from "@/assets/schools/kenya-school-4.jpg";
 
 interface Product {
   id: string;
@@ -40,6 +44,8 @@ interface Stats {
   totalGirls: number;
   totalProducts: number;
 }
+
+const schoolImages = [kenyaSchool1, kenyaSchool2, kenyaSchool3, kenyaSchool4];
 
 const Home = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -96,6 +102,10 @@ const Home = () => {
     window.location.href = `/donate?${params.toString()}`;
   };
 
+  const formatKES = (amount: number) => {
+    return `KES ${amount.toLocaleString()}`;
+  };
+
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -108,7 +118,7 @@ const Home = () => {
             <div 
               className="absolute inset-0 bg-cover bg-center"
               style={{
-                backgroundImage: `url('https://images.unsplash.com/photo-1509062522246-3755977927d7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80')`,
+                backgroundImage: `url(${kenyaSchool1})`,
               }}
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent to-primary/20" />
@@ -118,13 +128,17 @@ const Home = () => {
           {/* Content Side */}
           <div className="gradient-hero flex items-center">
             <div className="px-8 lg:px-16 py-20 max-w-2xl">
+              <div className="inline-flex items-center gap-2 bg-white/20 text-white px-4 py-2 rounded-full text-sm font-medium mb-4">
+                🇰🇪 Proudly Kenyan
+              </div>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-6 leading-tight">
-                Empower girls.
+                Empower Kenyan girls.
                 <br />
-                <span className="text-secondary">Shape the future.</span>
+                <span className="text-secondary">Keep them in school.</span>
               </h1>
               <p className="text-xl text-white/90 mb-8 leading-relaxed">
-                Girls need sanitary pads to stay in school. Support a school in your community, or beyond, so every girl has the supplies to succeed.
+                Millions of Kenyan girls miss school every month due to lack of sanitary pads. 
+                Support a school in your community so every girl has the supplies to succeed.
               </p>
               <Link to="/donate">
                 <Button size="lg" className="bg-white text-primary hover:bg-white/90 text-lg px-8 py-6 font-bold rounded-full">
@@ -134,7 +148,7 @@ const Home = () => {
               </Link>
               <p className="text-white/70 text-sm mt-6 flex items-center gap-2">
                 <CheckCircle className="w-4 h-4 text-white" />
-                100% of donations go directly to schools
+                100% of donations go directly to Kenyan schools
               </p>
             </div>
           </div>
@@ -157,7 +171,7 @@ const Home = () => {
               <MapPin className="w-5 h-5 text-muted-foreground" />
               <Input
                 type="text"
-                placeholder="City or region"
+                placeholder="County (e.g., Nairobi, Kisumu)"
                 value={locationQuery}
                 onChange={(e) => setLocationQuery(e.target.value)}
                 className="border-0 shadow-none focus-visible:ring-0"
@@ -184,11 +198,11 @@ const Home = () => {
               <div className="text-4xl font-extrabold text-accent mb-2">
                 {stats.totalSchools}
               </div>
-              <p className="text-muted-foreground">Schools Reached</p>
+              <p className="text-muted-foreground">Kenyan Schools</p>
             </div>
             <div className="text-center">
               <div className="text-4xl font-extrabold text-primary mb-2">
-                ${stats.totalDonations.toLocaleString()}
+                {formatKES(stats.totalDonations)}
               </div>
               <p className="text-muted-foreground">Total Donated</p>
             </div>
@@ -207,28 +221,40 @@ const Home = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-12">
             <div>
-              <h2 className="text-4xl font-extrabold text-primary mb-2">Schools & Stores</h2>
+              <h2 className="text-4xl font-extrabold text-primary mb-2">Kenyan Schools</h2>
               <p className="text-muted-foreground">Support schools directly through their stores</p>
             </div>
-            <Link to="/schools">
-              <Button variant="outline" className="rounded-full">
-                View All Schools
-                <ArrowRight className="ml-2 w-4 h-4" />
-              </Button>
-            </Link>
+            <div className="flex gap-3">
+              <Link to="/register-school">
+                <Button variant="outline" className="rounded-full">
+                  <Plus className="mr-2 w-4 h-4" />
+                  Register School
+                </Button>
+              </Link>
+              <Link to="/schools">
+                <Button variant="outline" className="rounded-full">
+                  View All
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+              </Link>
+            </div>
           </div>
 
           {schools.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {schools.map((school) => (
+              {schools.map((school, index) => (
                 <Link 
                   key={school.id} 
                   to={`/donate?school=${school.id}`}
                   className="block"
                 >
                   <div className="card-project group cursor-pointer">
-                    <div className="h-32 gradient-hero flex items-center justify-center">
-                      <School className="w-12 h-12 text-white/60" />
+                    <div className="h-32 overflow-hidden">
+                      <img 
+                        src={school.image_url || schoolImages[index % schoolImages.length]} 
+                        alt={school.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
                     </div>
                     <div className="p-4">
                       <h3 className="font-bold text-lg mb-1 group-hover:text-primary transition-colors">
@@ -236,7 +262,7 @@ const Home = () => {
                       </h3>
                       <p className="text-sm text-muted-foreground flex items-center gap-1 mb-3">
                         <MapPin className="w-3 h-3" />
-                        {school.location || "Location TBD"}
+                        {school.location || "Kenya"}
                       </p>
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">
@@ -258,9 +284,9 @@ const Home = () => {
               <School className="w-16 h-16 mx-auto text-primary/50 mb-4" />
               <h3 className="text-xl font-bold mb-2">No schools registered yet</h3>
               <p className="text-muted-foreground mb-6">
-                Be the first to register your school!
+                Be the first to register your Kenyan school!
               </p>
-              <Link to="/auth?type=school">
+              <Link to="/register-school">
                 <Button className="btn-primary">
                   Register Your School
                 </Button>
@@ -294,14 +320,15 @@ const Home = () => {
                   id={product.id}
                   title={product.name}
                   description={product.description || "Help provide sanitary supplies to girls in need."}
-                  schoolName={product.schools?.name || "School in Need"}
-                  location={product.schools?.location || "Location TBD"}
+                  schoolName={product.schools?.name || "Kenyan School"}
+                  location={product.schools?.location || "Kenya"}
                   imageUrl={product.image_url}
                   amountNeeded={product.price * (product.stock || 100)}
                   amountRaised={product.price * Math.floor((product.stock || 100) * 0.3)}
                   isUrgent={product.is_featured || false}
                   studentsHelped={product.schools?.students_count || 0}
                   schoolId={product.schools?.id}
+                  currency="KES"
                 />
               ))}
             </div>
@@ -312,7 +339,7 @@ const Home = () => {
               <p className="text-muted-foreground mb-6">
                 Be the first to register a school and create a project!
               </p>
-              <Link to="/auth?type=school">
+              <Link to="/register-school">
                 <Button className="btn-primary">
                   Register Your School
                 </Button>
@@ -343,8 +370,8 @@ const Home = () => {
               Donate Sanitary Pads
             </h2>
             <p className="text-xl text-white/90 mb-8 leading-relaxed">
-              Millions of girls miss school every month due to lack of menstrual hygiene products. 
-              Your donation provides dignity, health, and education to girls who need it most.
+              In Kenya, 65% of women and girls cannot afford sanitary pads. Many girls miss up to 20% of school days. 
+              Your donation provides dignity, health, and education to Kenyan girls who need it most.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/donate">
@@ -372,22 +399,22 @@ const Home = () => {
               {
                 icon: Search,
                 title: "Find a School",
-                description: "Browse schools and their stores for sanitary supplies needed.",
+                description: "Browse Kenyan schools and their stores for sanitary supplies needed.",
               },
               {
                 icon: Heart,
                 title: "Make a Donation",
-                description: "Choose products from the store. 100% goes to the school.",
+                description: "Choose products from the store. Pay via M-Pesa or Bitcoin.",
               },
               {
                 icon: Package,
                 title: "Supplies Delivered",
-                description: "We ensure supplies reach schools quickly and safely.",
+                description: "We ensure supplies reach schools across all 47 counties.",
               },
               {
                 icon: Users,
                 title: "Track Your Impact",
-                description: "See real-time updates on how your donation helps girls.",
+                description: "See real-time updates on how your donation helps Kenyan girls.",
               },
             ].map((step, i) => (
               <div key={i} className="text-center">
@@ -408,13 +435,27 @@ const Home = () => {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-4xl font-extrabold mb-6 text-primary">
-                Are you a school administrator?
+                Are you a school in Kenya?
               </h2>
               <p className="text-xl text-muted-foreground mb-8">
                 Register your school to create a store and receive donations of sanitary pads and other essential supplies. 
-                Join our network of schools empowering girls through education.
+                Join our network of Kenyan schools empowering girls through education.
               </p>
-              <Link to="/auth?type=school">
+              <div className="flex items-center gap-4 mb-6 text-sm text-muted-foreground">
+                <span className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-accent" />
+                  Free registration
+                </span>
+                <span className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-accent" />
+                  Direct donations
+                </span>
+                <span className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-accent" />
+                  M-Pesa support
+                </span>
+              </div>
+              <Link to="/register-school">
                 <Button size="lg" className="btn-primary text-lg px-8 py-6">
                   <School className="mr-2 w-5 h-5" />
                   Register Your School
@@ -424,8 +465,8 @@ const Home = () => {
             <div className="relative">
               <div className="rounded-2xl overflow-hidden shadow-lg">
                 <img
-                  src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                  alt="Students in classroom"
+                  src={kenyaSchool3}
+                  alt="Kenyan students in classroom"
                   className="w-full h-80 object-cover"
                 />
               </div>
