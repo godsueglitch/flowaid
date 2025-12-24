@@ -145,8 +145,8 @@ serve(async (req) => {
 
     console.log('Creating Bitnob payment for:', customerEmail);
 
-    // Using Bitnob SANDBOX endpoint for testing
-    const bitnobResponse = await fetch('https://sandboxapi.bitnob.co/api/v1/checkout', {
+    // Using Bitnob PRODUCTION endpoint
+    const bitnobResponse = await fetch('https://api.bitnob.com/api/v1/checkout', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${bitnobApiKey}`,
