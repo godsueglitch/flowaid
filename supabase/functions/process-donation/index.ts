@@ -1,10 +1,47 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// UUID regex pattern
+const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+// Input validation schema
+const donationSchema = z.object({
+  productId: z.string().regex(uuidRegex, 'Invalid product ID format'),
+  amount: z.number().positive('Amount must be positive').max(1000000, 'Amount exceeds maximum limit'),
+  quantity: z.number().int().positive().max(10000).default(1),
+  schoolId: z.string().regex(uuidRegex, 'Invalid school ID format').optional().nullable(),
+  isAnonymous: z.boolean().default(false),
+  anonymousEmail: z.string().email('Invalid email format').max(255).optional().nullable(),
+  anonymousName: z.string().max(100, 'Name too long').optional().nullable(),
+});
+
+// Simple in-memory rate limiting (per IP/email)
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_MAX = 10; // Max requests per window
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
+function checkRateLimit(identifier: string): { allowed: boolean; remaining: number; resetIn: number } {
+  const now = Date.now();
+  const entry = rateLimitMap.get(identifier);
+  
+  if (!entry || now > entry.resetTime) {
+    rateLimitMap.set(identifier, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+    return { allowed: true, remaining: RATE_LIMIT_MAX - 1, resetIn: RATE_LIMIT_WINDOW_MS };
+  }
+  
+  if (entry.count >= RATE_LIMIT_MAX) {
+    return { allowed: false, remaining: 0, resetIn: entry.resetTime - now };
+  }
+  
+  entry.count++;
+  return { allowed: true, remaining: RATE_LIMIT_MAX - entry.count, resetIn: entry.resetTime - now };
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -19,15 +56,45 @@ serve(async (req) => {
     // Use service role for anonymous donations, anon key for authenticated
     const authHeader = req.headers.get('Authorization');
     
-    const { 
-      productId, 
-      amount, 
-      quantity = 1, 
-      schoolId,
-      isAnonymous = false,
-      anonymousEmail,
-      anonymousName
-    } = await req.json();
+    // Parse and validate input
+    const rawBody = await req.json();
+    const validationResult = donationSchema.safeParse(rawBody);
+    
+    if (!validationResult.success) {
+      const errorMessages = validationResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ');
+      console.error('Validation failed:', errorMessages);
+      return new Response(
+        JSON.stringify({ error: `Validation failed: ${errorMessages}` }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+    
+    const { productId, amount, quantity, schoolId, isAnonymous, anonymousEmail, anonymousName } = validationResult.data;
+
+    // Check rate limit using email or IP
+    const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
+                     req.headers.get('cf-connecting-ip') || 
+                     'unknown';
+    const rateLimitKey = isAnonymous ? (anonymousEmail || clientIp) : clientIp;
+    const rateCheck = checkRateLimit(rateLimitKey);
+    
+    if (!rateCheck.allowed) {
+      console.warn('Rate limit exceeded for:', rateLimitKey);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Too many donation attempts. Please try again later.',
+          retryAfter: Math.ceil(rateCheck.resetIn / 1000)
+        }),
+        { 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json',
+            'Retry-After': String(Math.ceil(rateCheck.resetIn / 1000))
+          }, 
+          status: 429 
+        }
+      );
+    }
 
     console.log('Processing donation:', { 
       productId, 
@@ -38,11 +105,7 @@ serve(async (req) => {
       anonymousEmail: anonymousEmail ? '***' : undefined
     });
 
-    // Validate required fields
-    if (!productId || !amount || amount <= 0) {
-      throw new Error('Invalid donation data: productId and positive amount required');
-    }
-
+    // Additional business logic validation
     if (isAnonymous && !anonymousEmail) {
       throw new Error('Email is required for anonymous donations');
     }
