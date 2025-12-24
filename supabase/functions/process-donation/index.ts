@@ -208,19 +208,36 @@ serve(async (req) => {
 
     console.log('Creating Bitnob payment for:', customerEmail);
 
-    // Using Bitnob PRODUCTION endpoint
-    // NOTE: Bitnob docs use *.bitnob.co for API base URLs (sandboxapi.bitnob.co / api.bitnob.co)
-    const bitnobResponse = await fetch('https://api.bitnob.co/api/v1/checkout', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${bitnobApiKey}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify(paymentPayload),
-    });
+    // Initialize Bitnob payment
+    // NOTE: We previously tried the *.bitnob.co host and encountered connection refusals.
+    // Using api.bitnob.com here since it is reachable from the backend runtime.
+    let bitnobResponse: Response;
+    let bitnobData: any = null;
 
-    const bitnobData = await bitnobResponse.json();
+    try {
+      bitnobResponse = await fetch('https://api.bitnob.com/api/v1/checkout', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${bitnobApiKey}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(paymentPayload),
+      });
+
+      // Bitnob typically returns JSON, but guard anyway
+      bitnobData = await bitnobResponse.json().catch(() => null);
+    } catch (err) {
+      console.error('Bitnob network error (connection refused / unreachable):', err);
+
+      // Mark donation as failed so we don't leave lots of pending rows
+      await serviceClient
+        .from('donations')
+        .update({ status: 'failed' })
+        .eq('id', donation.id);
+
+      throw new Error('Payment provider is currently unreachable from our backend. Please try again later.');
+    }
 
     if (!bitnobResponse.ok) {
       console.error('Bitnob API error:', bitnobData);
