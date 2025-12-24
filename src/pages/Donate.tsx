@@ -328,6 +328,17 @@ const Donate = () => {
           
           {selectedProduct && (
             <div className="space-y-6 py-4">
+              {/* Product & School Info */}
+              <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
+                <h3 className="font-semibold text-lg">{selectedProduct.name}</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  School: <span className="font-medium text-foreground">{selectedProduct.schools?.name || "Partner School"}</span>
+                  {selectedProduct.schools?.location && ` • ${selectedProduct.schools.location}`}
+                </p>
+                <p className="text-primary font-bold mt-2">
+                  ${selectedProduct.price.toFixed(2)} per pack
+                </p>
+              </div>
               {/* Donation Type */}
               <Tabs value={donationType} onValueChange={(v) => setDonationType(v as "registered" | "anonymous")}>
                 <TabsList className="grid w-full grid-cols-2">
