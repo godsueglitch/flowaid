@@ -398,16 +398,27 @@ const Donate = () => {
                 </TabsContent>
               </Tabs>
 
-              {/* Payment via Bitnob */}
-              <div className="p-4 rounded-lg bg-muted/50 border">
-                <div className="flex items-center gap-2 mb-2">
-                  <Wallet className="w-5 h-5 text-primary" />
-                  <span className="font-medium">Connect Wallet</span>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Pay securely with Bitnob virtual card. Supports card payments and cryptocurrency.
-                </p>
-              </div>
+              {/* Connect Wallet Button */}
+              <Button
+                onClick={processDonation}
+                disabled={processing || (donationType === "anonymous" && !anonEmail) || (donationType === "registered" && !isAuthenticated)}
+                className="w-full btn-primary py-6 text-lg"
+              >
+                {processing ? (
+                  <>
+                    <Loader2 className="mr-2 w-5 h-5 animate-spin" />
+                    Connecting...
+                  </>
+                ) : (
+                  <>
+                    <Wallet className="mr-2 w-5 h-5" />
+                    Connect Wallet
+                  </>
+                )}
+              </Button>
+              <p className="text-xs text-center text-muted-foreground">
+                Pay securely with Bitnob virtual card
+              </p>
 
               {/* Quantity */}
               <div className="space-y-2">
@@ -473,23 +484,6 @@ const Donate = () => {
                   disabled={processing}
                 >
                   Cancel
-                </Button>
-                <Button
-                  className="flex-1 btn-primary"
-                  onClick={processDonation}
-                  disabled={processing || (donationType === "anonymous" && !anonEmail) || (donationType === "registered" && !isAuthenticated)}
-                >
-                  {processing ? (
-                    <>
-                      <Loader2 className="mr-2 w-4 h-4 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <Heart className="mr-2 w-4 h-4" />
-                      Donate Now
-                    </>
-                  )}
                 </Button>
               </div>
             </div>
