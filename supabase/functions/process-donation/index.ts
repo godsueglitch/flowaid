@@ -26,8 +26,7 @@ serve(async (req) => {
       schoolId,
       isAnonymous = false,
       anonymousEmail,
-      anonymousName,
-      walletAddress
+      anonymousName
     } = await req.json();
 
     console.log('Processing donation:', { 
@@ -36,17 +35,12 @@ serve(async (req) => {
       quantity, 
       schoolId, 
       isAnonymous,
-      anonymousEmail: anonymousEmail ? '***' : undefined,
-      walletAddress: walletAddress ? `${walletAddress.slice(0, 6)}...` : undefined
+      anonymousEmail: anonymousEmail ? '***' : undefined
     });
 
     // Validate required fields
     if (!productId || !amount || amount <= 0) {
       throw new Error('Invalid donation data: productId and positive amount required');
-    }
-
-    if (!walletAddress) {
-      throw new Error('Wallet address is required');
     }
 
     if (isAnonymous && !anonymousEmail) {

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Wallet, Heart, School, Loader2 } from "lucide-react";
+import { Heart, School, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
@@ -19,7 +19,6 @@ const Auth = () => {
   const navigate = useNavigate();
   const userType = searchParams.get("type") || "donor";
   const [isLogin, setIsLogin] = useState(true);
-  const [walletAddress, setWalletAddress] = useState("");
   const [loading, setLoading] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
   
@@ -72,20 +71,6 @@ const Auth = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const connectWallet = async () => {
-    const ethereum = (window as any).ethereum;
-    if (typeof ethereum !== "undefined") {
-      try {
-        const accounts = await ethereum.request({ method: "eth_requestAccounts" });
-        setWalletAddress(accounts[0]);
-        toast.success("Wallet connected successfully!");
-      } catch (error) {
-        toast.error("Failed to connect wallet. Please try again.");
-      }
-    } else {
-      toast.error("MetaMask not detected. Please install MetaMask to connect your wallet.");
-    }
-  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,14 +95,6 @@ const Auth = () => {
       toast.error(error.message);
       setLoading(false);
       return;
-    }
-
-    // Update wallet address if connected
-    if (walletAddress && data.user) {
-      await supabase
-        .from("profiles")
-        .update({ wallet_address: walletAddress })
-        .eq("id", data.user.id);
     }
 
     toast.success("Logged in successfully!");
@@ -157,14 +134,6 @@ const Auth = () => {
       }
       setLoading(false);
       return;
-    }
-
-    // Update wallet address if connected
-    if (walletAddress && data.user) {
-      await supabase
-        .from("profiles")
-        .update({ wallet_address: walletAddress })
-        .eq("id", data.user.id);
     }
 
     toast.success("Account created successfully!");
@@ -231,30 +200,6 @@ const Auth = () => {
                     disabled={loading}
                   />
                 </div>
-                
-                {/* Wallet Connection */}
-                <div className="space-y-3 pt-2">
-                  {walletAddress ? (
-                    <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 flex items-center gap-2">
-                      <Wallet className="w-5 h-5 text-primary" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-primary">Wallet Connected</p>
-                        <p className="text-xs text-muted-foreground truncate">{walletAddress}</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full"
-                      onClick={connectWallet}
-                      disabled={loading}
-                    >
-                      <Wallet className="mr-2 w-5 h-5" />
-                      Connect Wallet (Optional)
-                    </Button>
-                  )}
-                </div>
 
                 <Button type="submit" className="w-full btn-glow" size="lg" disabled={loading}>
                   {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
@@ -302,33 +247,6 @@ const Auth = () => {
                     required 
                     disabled={loading}
                   />
-                </div>
-                
-                {/* Wallet Connection */}
-                <div className="space-y-3 pt-2">
-                  {walletAddress ? (
-                    <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 flex items-center gap-2">
-                      <Wallet className="w-5 h-5 text-primary" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-primary">Wallet Connected</p>
-                        <p className="text-xs text-muted-foreground truncate">{walletAddress}</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full"
-                      onClick={connectWallet}
-                      disabled={loading}
-                    >
-                      <Wallet className="mr-2 w-5 h-5" />
-                      Connect Wallet (Optional)
-                    </Button>
-                  )}
-                  <p className="text-xs text-muted-foreground text-center">
-                    Your wallet will be used for secure transactions
-                  </p>
                 </div>
 
                 <Button type="submit" className="w-full btn-glow" size="lg" disabled={loading}>

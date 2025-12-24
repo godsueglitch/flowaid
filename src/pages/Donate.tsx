@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Heart, Search, MapPin, Wallet, User, UserX, Loader2, Filter } from "lucide-react";
+import { Heart, Search, User, UserX, Loader2, Filter, CreditCard } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProjectCard from "@/components/ProjectCard";
@@ -37,10 +37,10 @@ const Donate = () => {
   const [showDonationModal, setShowDonationModal] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [customAmount, setCustomAmount] = useState("");
-  const [walletAddress, setWalletAddress] = useState("");
   const [donationType, setDonationType] = useState<"registered" | "anonymous">("anonymous");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
   const [selectedSchoolId, setSelectedSchoolId] = useState<string | null>(searchParams.get("school"));
   const [selectedSchoolName, setSelectedSchoolName] = useState<string | null>(null);
@@ -82,17 +82,8 @@ const Donate = () => {
     if (user) {
       setIsAuthenticated(true);
       setUserId(user.id);
+      setUserEmail(user.email || null);
       setDonationType("registered");
-      
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("wallet_address")
-        .eq("id", user.id)
-        .single();
-      
-      if (profile?.wallet_address) {
-        setWalletAddress(profile.wallet_address);
-      }
     }
   };
 
@@ -140,49 +131,24 @@ const Donate = () => {
     setShowDonationModal(true);
   };
 
-  const connectWallet = async () => {
-    const ethereum = (window as any).ethereum;
-    
-    if (typeof ethereum !== "undefined") {
-      try {
-        const accounts = await ethereum.request({ method: "eth_requestAccounts" });
-        const address = accounts[0];
-        setWalletAddress(address);
-        
-        if (userId) {
-          await supabase
-            .from("profiles")
-            .update({ wallet_address: address })
-            .eq("id", userId);
-        }
-        
-        toast({
-          title: "Wallet Connected!",
-          description: `Connected: ${address.slice(0, 6)}...${address.slice(-4)}`,
-        });
-      } catch (error: any) {
-        toast({
-          title: "Connection Failed",
-          description: error.message || "Could not connect to wallet",
-          variant: "destructive",
-        });
-      }
-    } else {
-      toast({
-        title: "MetaMask Required",
-        description: "Please install MetaMask to connect your wallet",
-        variant: "destructive",
-      });
-    }
-  };
-
   const processDonation = async () => {
     if (!selectedProduct) return;
 
-    if (!walletAddress) {
+    // For anonymous donations, require email
+    if (donationType === "anonymous" && !anonEmail) {
       toast({
-        title: "Wallet Required",
-        description: "Please connect your wallet to proceed",
+        title: "Email Required",
+        description: "Please provide an email for donation confirmation",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // For registered donations, require login
+    if (donationType === "registered" && !isAuthenticated) {
+      toast({
+        title: "Login Required",
+        description: "Please log in to donate with your account",
         variant: "destructive",
       });
       return;
@@ -223,7 +189,6 @@ const Donate = () => {
           isAnonymous: donationType === "anonymous",
           anonymousEmail: donationType === "anonymous" ? anonEmail : undefined,
           anonymousName: donationType === "anonymous" ? anonName : undefined,
-          walletAddress: walletAddress,
         },
       });
 
@@ -431,25 +396,16 @@ const Donate = () => {
                 </TabsContent>
               </Tabs>
 
-              {/* Wallet */}
-              <div className="space-y-2">
-                <Label>Payment Wallet</Label>
-                {walletAddress ? (
-                  <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Wallet className="w-4 h-4 text-primary" />
-                      <span className="text-sm font-medium text-primary">Connected</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground font-mono truncate">
-                      {walletAddress}
-                    </p>
-                  </div>
-                ) : (
-                  <Button variant="outline" className="w-full" onClick={connectWallet}>
-                    <Wallet className="mr-2 w-4 h-4" />
-                    Connect Wallet
-                  </Button>
-                )}
+              {/* Payment Info */}
+              <div className="p-4 rounded-lg bg-muted/50 border">
+                <div className="flex items-center gap-2 mb-2">
+                  <CreditCard className="w-5 h-5 text-primary" />
+                  <span className="font-medium">Secure Payment via Bitnob</span>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  You'll be redirected to Bitnob's secure checkout to complete your donation. 
+                  Supports card payments and cryptocurrency.
+                </p>
               </div>
 
               {/* Quantity */}
@@ -520,7 +476,7 @@ const Donate = () => {
                 <Button
                   className="flex-1 btn-primary"
                   onClick={processDonation}
-                  disabled={processing || !walletAddress || (donationType === "anonymous" && !anonEmail)}
+                  disabled={processing || (donationType === "anonymous" && !anonEmail) || (donationType === "registered" && !isAuthenticated)}
                 >
                   {processing ? (
                     <>
