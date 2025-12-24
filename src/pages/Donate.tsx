@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Heart, Search, User, UserX, Loader2, Filter, CreditCard } from "lucide-react";
+import { Heart, Search, User, UserX, Loader2, Filter, Wallet } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProjectCard from "@/components/ProjectCard";
@@ -399,11 +399,11 @@ const Donate = () => {
               {/* Payment Info */}
               <div className="p-4 rounded-lg bg-muted/50 border">
                 <div className="flex items-center gap-2 mb-2">
-                  <CreditCard className="w-5 h-5 text-primary" />
-                  <span className="font-medium">Secure Payment via Bitnob</span>
+                  <Wallet className="w-5 h-5 text-primary" />
+                  <span className="font-medium">Connect Wallet</span>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  You'll be redirected to Bitnob's secure checkout to complete your donation. 
+                  You'll be redirected to complete your donation via Bitnob. 
                   Supports card payments and cryptocurrency.
                 </p>
               </div>

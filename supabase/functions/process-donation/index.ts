@@ -172,6 +172,38 @@ serve(async (req) => {
       })
       .eq('id', donation.id);
 
+    // Get school name for email
+    let schoolName = null;
+    if (finalSchoolId) {
+      const { data: school } = await serviceClient
+        .from('schools')
+        .select('name')
+        .eq('id', finalSchoolId)
+        .single();
+      schoolName = school?.name;
+    }
+
+    // Send confirmation email (fire and forget - don't block the response)
+    const emailPayload = {
+      email: customerEmail,
+      donorName: isAnonymous ? anonymousName : null,
+      productName: product.name,
+      amount: amount,
+      quantity: quantity,
+      schoolName: schoolName,
+      donationId: donation.id,
+    };
+
+    // Send email asynchronously
+    fetch(`${supabaseUrl}/functions/v1/send-donation-confirmation`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${supabaseAnonKey}`,
+      },
+      body: JSON.stringify(emailPayload),
+    }).catch(err => console.error('Failed to send confirmation email:', err));
+
     return new Response(
       JSON.stringify({
         success: true,
