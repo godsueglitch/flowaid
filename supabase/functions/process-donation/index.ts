@@ -118,14 +118,19 @@ serve(async (req) => {
     console.log('Donation created:', donation.id);
 
     // Initialize Bitnob payment
-    const bitnobApiKey = Deno.env.get('BITNOB_API_KEY');
-    
-    if (!bitnobApiKey) {
+    const rawBitnobApiKey = Deno.env.get('BITNOB_API_KEY')?.trim();
+
+    if (!rawBitnobApiKey) {
       console.error('BITNOB_API_KEY not configured');
       throw new Error('Payment system not configured. Please contact support.');
     }
 
-    const customerEmail = isAnonymous ? anonymousEmail : (await supabaseClient.auth.getUser()).data.user?.email;
+    // Users sometimes paste "Bearer <key>" instead of the raw key
+    const bitnobApiKey = rawBitnobApiKey.replace(/^Bearer\s+/i, '').trim();
+
+    const customerEmail = isAnonymous
+      ? anonymousEmail
+      : (await supabaseClient.auth.getUser()).data.user?.email;
 
     const paymentPayload = {
       amount: amount,
@@ -153,12 +158,20 @@ serve(async (req) => {
 
     if (!bitnobResponse.ok) {
       console.error('Bitnob API error:', bitnobData);
+
       // Update donation status to failed
       await serviceClient
         .from('donations')
         .update({ status: 'failed' })
         .eq('id', donation.id);
-      throw new Error(bitnobData.message || 'Failed to initialize payment');
+
+      if (bitnobResponse.status === 401) {
+        throw new Error(
+          'Bitnob authentication failed. Please confirm BITNOB_API_KEY is a valid API key (paste the raw key, not "Bearer ...") and that it matches your environment (sandbox vs production).'
+        );
+      }
+
+      throw new Error(bitnobData?.message || bitnobData?.detail || 'Failed to initialize payment');
     }
 
     console.log('Bitnob payment created successfully');
