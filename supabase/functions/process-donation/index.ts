@@ -191,6 +191,13 @@ serve(async (req) => {
     // Users sometimes paste "Bearer <key>" instead of the raw key
     const bitnobApiKey = rawBitnobApiKey.replace(/^Bearer\s+/i, '').trim();
 
+    // Safe debug info (never log the full key)
+    console.log('Bitnob key info:', {
+      length: bitnobApiKey.length,
+      prefix: bitnobApiKey.slice(0, 4),
+      suffix: bitnobApiKey.slice(-4),
+    });
+
     const customerEmail = isAnonymous
       ? anonymousEmail
       : (await supabaseClient.auth.getUser()).data.user?.email;
@@ -248,13 +255,17 @@ serve(async (req) => {
         .update({ status: 'failed' })
         .eq('id', donation.id);
 
+      const correlationId = bitnobData?.correlation_id || bitnobData?.correlationId || bitnobData?.data?.correlation_id;
+
       if (bitnobResponse.status === 401) {
         throw new Error(
-          'Bitnob authentication failed. Please confirm BITNOB_API_KEY is a valid API key (paste the raw key, not "Bearer ...") and that it matches your environment (sandbox vs production).'
+          `Bitnob rejected the API key (401 Unauthorized). This almost always means the key is invalid, revoked, or from the wrong environment (sandbox vs production). Please regenerate a PRODUCTION API key and update BITNOB_API_KEY. Correlation ID: ${correlationId ?? 'n/a'}`
         );
       }
 
-      throw new Error(bitnobData?.message || bitnobData?.detail || 'Failed to initialize payment');
+      throw new Error(
+        bitnobData?.message || bitnobData?.detail || `Failed to initialize payment (status ${bitnobResponse.status}). Correlation ID: ${correlationId ?? 'n/a'}`
+      );
     }
 
     console.log('Bitnob payment created successfully');
