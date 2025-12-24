@@ -192,11 +192,14 @@ serve(async (req) => {
     const bitnobApiKey = rawBitnobApiKey.replace(/^Bearer\s+/i, '').trim();
 
     // Safe debug info (never log the full key)
-    console.log('Bitnob key info:', {
-      length: bitnobApiKey.length,
-      prefix: bitnobApiKey.slice(0, 4),
-      suffix: bitnobApiKey.slice(-4),
-    });
+    const keyBytes = new TextEncoder().encode(bitnobApiKey);
+    const digest = await crypto.subtle.digest('SHA-256', keyBytes);
+    const fingerprint = Array.from(new Uint8Array(digest))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('')
+      .slice(0, 12);
+
+    console.log('Bitnob key fingerprint (sha256, first12):', fingerprint);
 
     const customerEmail = isAnonymous
       ? anonymousEmail
