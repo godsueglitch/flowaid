@@ -209,11 +209,13 @@ serve(async (req) => {
     console.log('Creating Bitnob payment for:', customerEmail);
 
     // Using Bitnob PRODUCTION endpoint
-    const bitnobResponse = await fetch('https://api.bitnob.com/api/v1/checkout', {
+    // NOTE: Bitnob docs use *.bitnob.co for API base URLs (sandboxapi.bitnob.co / api.bitnob.co)
+    const bitnobResponse = await fetch('https://api.bitnob.co/api/v1/checkout', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${bitnobApiKey}`,
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
       body: JSON.stringify(paymentPayload),
     });
