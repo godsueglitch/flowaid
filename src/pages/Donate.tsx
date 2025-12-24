@@ -49,9 +49,6 @@ const Donate = () => {
   const [anonEmail, setAnonEmail] = useState("");
   const [anonName, setAnonName] = useState("");
   
-  // Wallet connection state
-  const [walletAddress, setWalletAddress] = useState<string | null>(null);
-  const [connectingWallet, setConnectingWallet] = useState(false);
   
   const { toast } = useToast();
 
@@ -135,49 +132,6 @@ const Donate = () => {
     setShowDonationModal(true);
   };
 
-  const connectWallet = async () => {
-    const ethereum = (window as any).ethereum;
-    if (typeof ethereum === "undefined") {
-      toast({
-        title: "MetaMask Required",
-        description: "Please install MetaMask to connect your wallet",
-        variant: "destructive",
-      });
-      window.open("https://metamask.io/download/", "_blank");
-      return;
-    }
-
-    setConnectingWallet(true);
-    try {
-      const accounts = await ethereum.request({
-        method: "eth_requestAccounts",
-      });
-      
-      if (accounts && accounts.length > 0) {
-        setWalletAddress(accounts[0]);
-        toast({
-          title: "Wallet Connected!",
-          description: `Connected: ${accounts[0].slice(0, 6)}...${accounts[0].slice(-4)}`,
-        });
-      }
-    } catch (error: any) {
-      toast({
-        title: "Connection Failed",
-        description: error.message || "Failed to connect wallet",
-        variant: "destructive",
-      });
-    } finally {
-      setConnectingWallet(false);
-    }
-  };
-
-  const disconnectWallet = () => {
-    setWalletAddress(null);
-    toast({
-      title: "Wallet Disconnected",
-      description: "Your wallet has been disconnected",
-    });
-  };
 
   const processDonation = async () => {
     if (!selectedProduct) return;
@@ -444,60 +398,15 @@ const Donate = () => {
                 </TabsContent>
               </Tabs>
 
-              {/* Wallet Connection */}
+              {/* Payment via Bitnob */}
               <div className="p-4 rounded-lg bg-muted/50 border">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <Wallet className="w-5 h-5 text-primary" />
-                    <span className="font-medium">Wallet</span>
-                  </div>
-                  {walletAddress && (
-                    <span className="text-xs text-muted-foreground">
-                      {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
-                    </span>
-                  )}
+                <div className="flex items-center gap-2 mb-2">
+                  <Wallet className="w-5 h-5 text-primary" />
+                  <span className="font-medium">Connect Wallet</span>
                 </div>
-                
-                {walletAddress ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-success">
-                      <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-                      <span className="text-sm font-medium">Wallet Connected</span>
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={disconnectWallet}
-                      className="w-full"
-                    >
-                      Disconnect Wallet
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">
-                      Connect your MetaMask wallet to donate with crypto
-                    </p>
-                    <Button 
-                      onClick={connectWallet}
-                      disabled={connectingWallet}
-                      className="w-full"
-                      variant="outline"
-                    >
-                      {connectingWallet ? (
-                        <>
-                          <Loader2 className="mr-2 w-4 h-4 animate-spin" />
-                          Connecting...
-                        </>
-                      ) : (
-                        <>
-                          <Wallet className="mr-2 w-4 h-4" />
-                          Connect Wallet
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                )}
+                <p className="text-sm text-muted-foreground">
+                  Pay securely with Bitnob virtual card. Supports card payments and cryptocurrency.
+                </p>
               </div>
 
               {/* Quantity */}
