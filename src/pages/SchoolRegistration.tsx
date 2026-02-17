@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { School, MapPin, Users, Phone, Mail, Building, ArrowLeft, Heart, CheckCircle } from "lucide-react";
+import { School, MapPin, Users, Phone, Mail, Building, ArrowLeft, Heart, CheckCircle, Wallet } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -57,6 +57,15 @@ const SchoolRegistration = () => {
       return;
     }
 
+    if (!formData.walletAddress.trim()) {
+      toast({
+        title: "Bitnob Wallet Required",
+        description: "Please provide your Bitnob wallet address for receiving donations.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -85,7 +94,8 @@ const SchoolRegistration = () => {
             location: `${formData.location}, ${formData.county}, Kenya`,
             students_count: parseInt(formData.studentsCount) || 0,
             description: formData.description,
-            wallet_address: formData.walletAddress || null,
+            wallet_address: formData.walletAddress,
+            status: "pending",
           });
 
         if (schoolError) throw schoolError;
@@ -119,7 +129,7 @@ const SchoolRegistration = () => {
               </div>
               <h2 className="text-3xl font-bold mb-4">Asante Sana! 🙏</h2>
               <p className="text-muted-foreground mb-6">
-                Your school registration has been submitted successfully. 
+                Your school registration has been submitted successfully and is <strong>pending admin approval</strong>. 
                 Our team will review your application and contact you within 48 hours.
               </p>
               <div className="space-y-3">
@@ -353,19 +363,29 @@ const SchoolRegistration = () => {
                   />
                 </div>
 
-                {/* Wallet (Optional) */}
-                <div className="space-y-2">
-                  <Label htmlFor="walletAddress">Bitcoin Wallet Address (Optional)</Label>
-                  <Input
-                    id="walletAddress"
-                    name="walletAddress"
-                    placeholder="For direct donations"
-                    value={formData.walletAddress}
-                    onChange={handleChange}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    If you have a Bitcoin wallet, donations can be sent directly to you
-                  </p>
+                {/* Bitnob Wallet (Required) */}
+                <div className="pt-4 border-t">
+                  <h3 className="font-semibold mb-4">Payment Information</h3>
+                  <div className="space-y-2">
+                    <Label htmlFor="walletAddress" className="flex items-center gap-2">
+                      <Wallet className="w-4 h-4" />
+                      Bitnob Wallet Address *
+                    </Label>
+                    <Input
+                      id="walletAddress"
+                      name="walletAddress"
+                      placeholder="Enter your Bitnob wallet address"
+                      value={formData.walletAddress}
+                      onChange={handleChange}
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      All donation transactions will be processed through your Bitnob wallet. 
+                      <a href="https://bitnob.com" target="_blank" rel="noopener noreferrer" className="text-primary underline ml-1">
+                        Create a Bitnob account
+                      </a> if you don't have one.
+                    </p>
+                  </div>
                 </div>
 
                 <Button 

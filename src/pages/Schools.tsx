@@ -40,6 +40,7 @@ const Schools = () => {
     const { data, error } = await supabase
       .from("schools")
       .select("*, products(id)")
+      .eq("status", "approved")
       .order("created_at", { ascending: false });
 
     if (error) {

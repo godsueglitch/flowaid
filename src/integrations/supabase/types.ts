@@ -164,6 +164,7 @@ export type Database = {
           location: string | null
           name: string
           profile_id: string | null
+          status: string
           students_count: number | null
           total_received: number | null
           updated_at: string
@@ -177,6 +178,7 @@ export type Database = {
           location?: string | null
           name: string
           profile_id?: string | null
+          status?: string
           students_count?: number | null
           total_received?: number | null
           updated_at?: string
@@ -190,6 +192,7 @@ export type Database = {
           location?: string | null
           name?: string
           profile_id?: string | null
+          status?: string
           students_count?: number | null
           total_received?: number | null
           updated_at?: string

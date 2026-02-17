@@ -80,6 +80,7 @@ const Donate = () => {
     const { data } = await supabase
       .from("schools")
       .select("id, name, location")
+      .eq("status", "approved")
       .order("name");
     setAllSchools(data || []);
   };
