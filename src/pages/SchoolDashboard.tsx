@@ -21,6 +21,7 @@ interface SchoolData {
   name: string;
   students_count: number | null;
   total_received: number | null;
+  status: string;
 }
 
 const SchoolDashboard = () => {
@@ -43,7 +44,7 @@ const SchoolDashboard = () => {
       // Get school data for this user
       const { data: schoolData } = await supabase
         .from("schools")
-        .select("id, name, students_count, total_received")
+        .select("id, name, students_count, total_received, status")
         .eq("profile_id", session.user.id)
         .single();
 
@@ -149,6 +150,12 @@ const SchoolDashboard = () => {
           <div className="mb-8">
             <h1 className="text-4xl font-bold mb-2">{school.name} Dashboard 🏫</h1>
             <p className="text-muted-foreground text-lg">Manage your profile and connect with donors</p>
+            {school.status === "pending" && (
+              <div className="mt-4 p-4 rounded-lg bg-yellow-50 border border-yellow-200 text-yellow-800">
+                <p className="font-semibold">⏳ Pending Approval</p>
+                <p className="text-sm">Your school registration is under review. You'll be able to receive donations once approved by our admin team.</p>
+              </div>
+            )}
           </div>
 
           {/* Stats Grid */}
