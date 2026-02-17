@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Heart, Search, User, UserX, Loader2, Filter, Wallet } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Heart, Search, User, UserX, Loader2, Filter, Wallet, School } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProjectCard from "@/components/ProjectCard";
@@ -22,10 +23,17 @@ interface Product {
   is_featured: boolean | null;
   school_id: string | null;
   schools?: {
+    id?: string;
     name: string;
     location: string | null;
     students_count: number | null;
   } | null;
+}
+
+interface SchoolOption {
+  id: string;
+  name: string;
+  location: string | null;
 }
 
 const Donate = () => {
@@ -44,6 +52,8 @@ const Donate = () => {
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
   const [selectedSchoolId, setSelectedSchoolId] = useState<string | null>(searchParams.get("school"));
   const [selectedSchoolName, setSelectedSchoolName] = useState<string | null>(null);
+  const [allSchools, setAllSchools] = useState<SchoolOption[]>([]);
+  const [modalSchoolId, setModalSchoolId] = useState<string | null>(null);
   
   // Anonymous donor fields
   const [anonEmail, setAnonEmail] = useState("");
@@ -56,6 +66,7 @@ const Donate = () => {
     const schoolId = searchParams.get("school");
     setSelectedSchoolId(schoolId);
     fetchProducts(schoolId);
+    fetchAllSchools();
     checkAuth();
     
     // Check if a specific product was requested
@@ -64,6 +75,14 @@ const Donate = () => {
       fetchProductById(productId);
     }
   }, [searchParams]);
+
+  const fetchAllSchools = async () => {
+    const { data } = await supabase
+      .from("schools")
+      .select("id, name, location")
+      .order("name");
+    setAllSchools(data || []);
+  };
 
   const fetchProductById = async (id: string) => {
     const { data } = await supabase
@@ -129,6 +148,7 @@ const Donate = () => {
     setSelectedProduct(product);
     setQuantity(1);
     setCustomAmount("");
+    setModalSchoolId(product.school_id || product.schools?.id || null);
     setShowDonationModal(true);
   };
 
@@ -187,7 +207,7 @@ const Donate = () => {
           productId: selectedProduct.id,
           amount: amount,
           quantity: quantity,
-          schoolId: selectedProduct.school_id,
+          schoolId: modalSchoolId || selectedProduct.school_id,
           isAnonymous: donationType === "anonymous",
           anonymousEmail: donationType === "anonymous" ? anonEmail : undefined,
           anonymousName: donationType === "anonymous" ? anonName : undefined,
@@ -328,17 +348,40 @@ const Donate = () => {
           
           {selectedProduct && (
             <div className="space-y-6 py-4">
-              {/* Product & School Info */}
+              {/* Product Info */}
               <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
                 <h3 className="font-semibold text-lg">{selectedProduct.name}</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  School: <span className="font-medium text-foreground">{selectedProduct.schools?.name || "Partner School"}</span>
-                  {selectedProduct.schools?.location && ` • ${selectedProduct.schools.location}`}
-                </p>
-                <p className="text-primary font-bold mt-2">
+                <p className="text-primary font-bold mt-1">
                   ${selectedProduct.price.toFixed(2)} per pack
                 </p>
               </div>
+
+              {/* School Selection */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <School className="w-4 h-4" />
+                  Select School to Receive Donation *
+                </Label>
+                <Select
+                  value={modalSchoolId || ""}
+                  onValueChange={(value) => setModalSchoolId(value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a school..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allSchools.map((school) => (
+                      <SelectItem key={school.id} value={school.id}>
+                        {school.name}{school.location ? ` — ${school.location}` : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {allSchools.length === 0 && (
+                  <p className="text-xs text-muted-foreground">No schools registered yet.</p>
+                )}
+              </div>
+
               {/* Donation Type */}
               <Tabs value={donationType} onValueChange={(v) => setDonationType(v as "registered" | "anonymous")}>
                 <TabsList className="grid w-full grid-cols-2">
@@ -409,28 +452,6 @@ const Donate = () => {
                 </TabsContent>
               </Tabs>
 
-              {/* Connect Wallet Button */}
-              <Button
-                onClick={processDonation}
-                disabled={processing || (donationType === "anonymous" && !anonEmail) || (donationType === "registered" && !isAuthenticated)}
-                className="w-full btn-primary py-6 text-lg"
-              >
-                {processing ? (
-                  <>
-                    <Loader2 className="mr-2 w-5 h-5 animate-spin" />
-                    Connecting...
-                  </>
-                ) : (
-                  <>
-                    <Wallet className="mr-2 w-5 h-5" />
-                    Connect Wallet
-                  </>
-                )}
-              </Button>
-              <p className="text-xs text-center text-muted-foreground">
-                Pay securely with Bitnob virtual card
-              </p>
-
               {/* Quantity */}
               <div className="space-y-2">
                 <Label htmlFor="quantity">Quantity (Packs)</Label>
@@ -496,7 +517,27 @@ const Donate = () => {
                 >
                   Cancel
                 </Button>
+                <Button
+                  onClick={processDonation}
+                  disabled={processing || (donationType === "anonymous" && !anonEmail) || (donationType === "registered" && !isAuthenticated)}
+                  className="flex-1 btn-primary"
+                >
+                  {processing ? (
+                    <>
+                      <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <Wallet className="mr-2 w-4 h-4" />
+                      Donate Now
+                    </>
+                  )}
+                </Button>
               </div>
+              <p className="text-xs text-center text-muted-foreground">
+                Pay securely with Bitnob virtual card
+              </p>
             </div>
           )}
         </DialogContent>
