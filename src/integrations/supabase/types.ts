@@ -161,6 +161,7 @@ export type Database = {
           description: string | null
           id: string
           image_url: string | null
+          license_number: string | null
           location: string | null
           name: string
           profile_id: string | null
@@ -175,6 +176,7 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          license_number?: string | null
           location?: string | null
           name: string
           profile_id?: string | null
@@ -189,6 +191,7 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          license_number?: string | null
           location?: string | null
           name?: string
           profile_id?: string | null
