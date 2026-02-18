@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { School, MapPin, Users, Phone, Mail, Building, ArrowLeft, Heart, CheckCircle, Wallet } from "lucide-react";
+import { School, MapPin, Users, Phone, Mail, Building, ArrowLeft, Heart, CheckCircle, Wallet, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -27,6 +27,7 @@ const SchoolRegistration = () => {
     confirmPassword: "",
     description: "",
     walletAddress: "",
+    licenseNumber: "",
   });
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -40,36 +41,28 @@ const SchoolRegistration = () => {
     e.preventDefault();
     
     if (formData.password !== formData.confirmPassword) {
-      toast({
-        title: "Passwords don't match",
-        description: "Please make sure your passwords match.",
-        variant: "destructive",
-      });
+      toast({ title: "Passwords don't match", description: "Please make sure your passwords match.", variant: "destructive" });
       return;
     }
 
     if (formData.password.length < 6) {
-      toast({
-        title: "Password too short",
-        description: "Password must be at least 6 characters.",
-        variant: "destructive",
-      });
+      toast({ title: "Password too short", description: "Password must be at least 6 characters.", variant: "destructive" });
       return;
     }
 
     if (!formData.walletAddress.trim()) {
-      toast({
-        title: "Bitnob Wallet Required",
-        description: "Please provide your Bitnob wallet address for receiving donations.",
-        variant: "destructive",
-      });
+      toast({ title: "Bitnob Wallet Required", description: "Please provide your Bitnob wallet address for receiving donations.", variant: "destructive" });
+      return;
+    }
+
+    if (!formData.licenseNumber.trim()) {
+      toast({ title: "License Number Required", description: "Please provide your school's registration/license number for verification.", variant: "destructive" });
       return;
     }
 
     setLoading(true);
 
     try {
-      // First create a user account for the school
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -85,7 +78,6 @@ const SchoolRegistration = () => {
       if (authError) throw authError;
 
       if (authData.user) {
-        // Create school record
         const { error: schoolError } = await supabase
           .from("schools")
           .insert({
@@ -95,23 +87,17 @@ const SchoolRegistration = () => {
             students_count: parseInt(formData.studentsCount) || 0,
             description: formData.description,
             wallet_address: formData.walletAddress,
+            license_number: formData.licenseNumber,
             status: "pending",
           });
 
         if (schoolError) throw schoolError;
 
         setSubmitted(true);
-        toast({
-          title: "Registration Successful! 🎉",
-          description: "Your school has been registered. Check your email for login details.",
-        });
+        toast({ title: "Registration Successful! 🎉", description: "Your school has been registered and is pending admin verification." });
       }
     } catch (error: any) {
-      toast({
-        title: "Registration Failed",
-        description: error.message || "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
+      toast({ title: "Registration Failed", description: error.message || "Something went wrong. Please try again.", variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -130,7 +116,7 @@ const SchoolRegistration = () => {
               <h2 className="text-3xl font-bold mb-4">Asante Sana! 🙏</h2>
               <p className="text-muted-foreground mb-6">
                 Your school registration has been submitted successfully and is <strong>pending admin approval</strong>. 
-                Our team will review your application and contact you within 48 hours.
+                Our team will verify your license number and contact you within 48 hours.
               </p>
               <div className="space-y-3">
                 <Button onClick={() => navigate("/")} className="w-full bg-primary hover:bg-primary/90">
@@ -153,14 +139,9 @@ const SchoolRegistration = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      {/* Hero Section */}
       <section className="bg-gradient-to-br from-primary/10 via-accent/5 to-secondary/10 py-16">
         <div className="container mx-auto px-4">
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/schools")}
-            className="mb-6"
-          >
+          <Button variant="ghost" onClick={() => navigate("/schools")} className="mb-6">
             <ArrowLeft className="mr-2 w-4 h-4" />
             Back to Schools
           </Button>
@@ -169,18 +150,14 @@ const SchoolRegistration = () => {
               <School className="w-4 h-4" />
               School Registration
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-              Register Your School
-            </h1>
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">Register Your School</h1>
             <p className="text-lg text-muted-foreground">
-              Join FlowAid Kenya and help your girl students access free sanitary products. 
-              Registration is free and takes less than 5 minutes.
+              Join FlowAid Kenya and help your girl students access free sanitary products. Registration is free and takes less than 5 minutes.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Registration Form */}
       <section className="py-12">
         <div className="container mx-auto px-4">
           <Card className="max-w-2xl mx-auto">
@@ -189,9 +166,7 @@ const SchoolRegistration = () => {
                 <Building className="w-5 h-5 text-primary" />
                 School Information
               </CardTitle>
-              <CardDescription>
-                Please provide accurate information about your school
-              </CardDescription>
+              <CardDescription>Please provide accurate information about your school</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -199,25 +174,11 @@ const SchoolRegistration = () => {
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="schoolName">School Name *</Label>
-                    <Input
-                      id="schoolName"
-                      name="schoolName"
-                      placeholder="e.g., Moi Girls High School"
-                      value={formData.schoolName}
-                      onChange={handleChange}
-                      required
-                    />
+                    <Input id="schoolName" name="schoolName" placeholder="e.g., Moi Girls High School" value={formData.schoolName} onChange={handleChange} required />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="county">County *</Label>
-                    <Input
-                      id="county"
-                      name="county"
-                      placeholder="e.g., Nairobi"
-                      value={formData.county}
-                      onChange={handleChange}
-                      required
-                    />
+                    <Input id="county" name="county" placeholder="e.g., Nairobi" value={formData.county} onChange={handleChange} required />
                   </div>
                 </div>
 
@@ -226,14 +187,7 @@ const SchoolRegistration = () => {
                     <MapPin className="w-4 h-4" />
                     Physical Address *
                   </Label>
-                  <Input
-                    id="location"
-                    name="location"
-                    placeholder="e.g., Kilimani, Nairobi"
-                    value={formData.location}
-                    onChange={handleChange}
-                    required
-                  />
+                  <Input id="location" name="location" placeholder="e.g., Kilimani, Nairobi" value={formData.location} onChange={handleChange} required />
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-4">
@@ -242,27 +196,36 @@ const SchoolRegistration = () => {
                       <Users className="w-4 h-4" />
                       Total Students *
                     </Label>
-                    <Input
-                      id="studentsCount"
-                      name="studentsCount"
-                      type="number"
-                      placeholder="e.g., 500"
-                      value={formData.studentsCount}
-                      onChange={handleChange}
-                      required
-                    />
+                    <Input id="studentsCount" name="studentsCount" type="number" placeholder="e.g., 500" value={formData.studentsCount} onChange={handleChange} required />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="girlsCount">Number of Girls *</Label>
+                    <Input id="girlsCount" name="girlsCount" type="number" placeholder="e.g., 250" value={formData.girlsCount} onChange={handleChange} required />
+                  </div>
+                </div>
+
+                {/* School Verification */}
+                <div className="pt-4 border-t">
+                  <h3 className="font-semibold mb-2 flex items-center gap-2">
+                    <ShieldCheck className="w-5 h-5 text-primary" />
+                    School Verification
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Provide your official school registration or license number issued by the Ministry of Education for verification.
+                  </p>
+                  <div className="space-y-2">
+                    <Label htmlFor="licenseNumber">School Registration / License Number *</Label>
                     <Input
-                      id="girlsCount"
-                      name="girlsCount"
-                      type="number"
-                      placeholder="e.g., 250"
-                      value={formData.girlsCount}
+                      id="licenseNumber"
+                      name="licenseNumber"
+                      placeholder="e.g., MOE/REG/2024/XXXX"
+                      value={formData.licenseNumber}
                       onChange={handleChange}
                       required
                     />
+                    <p className="text-xs text-muted-foreground">
+                      This number will be verified by our admin team before your school is approved. You can find it on your school's registration certificate.
+                    </p>
                   </div>
                 </div>
 
@@ -272,29 +235,14 @@ const SchoolRegistration = () => {
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="contactName">Full Name *</Label>
-                      <Input
-                        id="contactName"
-                        name="contactName"
-                        placeholder="e.g., Jane Wanjiku"
-                        value={formData.contactName}
-                        onChange={handleChange}
-                        required
-                      />
+                      <Input id="contactName" name="contactName" placeholder="e.g., Jane Wanjiku" value={formData.contactName} onChange={handleChange} required />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="phone" className="flex items-center gap-2">
                         <Phone className="w-4 h-4" />
                         Phone Number *
                       </Label>
-                      <Input
-                        id="phone"
-                        name="phone"
-                        type="tel"
-                        placeholder="0734319033"
-                        value={formData.phone}
-                        onChange={handleChange}
-                        required
-                      />
+                      <Input id="phone" name="phone" type="tel" placeholder="0734319033" value={formData.phone} onChange={handleChange} required />
                     </div>
                   </div>
                   <div className="mt-4 space-y-2">
@@ -302,15 +250,7 @@ const SchoolRegistration = () => {
                       <Mail className="w-4 h-4" />
                       Email Address *
                     </Label>
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      placeholder="principal@school.ac.ke"
-                      value={formData.email}
-                      onChange={handleChange}
-                      required
-                    />
+                    <Input id="email" name="email" type="email" placeholder="principal@school.ac.ke" value={formData.email} onChange={handleChange} required />
                   </div>
                 </div>
 
@@ -320,47 +260,20 @@ const SchoolRegistration = () => {
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="password">Password *</Label>
-                      <Input
-                        id="password"
-                        name="password"
-                        type="password"
-                        placeholder="Min 6 characters"
-                        value={formData.password}
-                        onChange={handleChange}
-                        required
-                        minLength={6}
-                      />
+                      <Input id="password" name="password" type="password" placeholder="Min 6 characters" value={formData.password} onChange={handleChange} required minLength={6} />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="confirmPassword">Confirm Password *</Label>
-                      <Input
-                        id="confirmPassword"
-                        name="confirmPassword"
-                        type="password"
-                        placeholder="Re-enter password"
-                        value={formData.confirmPassword}
-                        onChange={handleChange}
-                        required
-                        minLength={6}
-                      />
+                      <Input id="confirmPassword" name="confirmPassword" type="password" placeholder="Re-enter password" value={formData.confirmPassword} onChange={handleChange} required minLength={6} />
                     </div>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    You'll use this password to log in to your school dashboard
-                  </p>
+                  <p className="text-xs text-muted-foreground mt-2">You'll use this password to log in to your school dashboard</p>
                 </div>
 
                 {/* Description */}
                 <div className="space-y-2">
                   <Label htmlFor="description">About Your School</Label>
-                  <Textarea
-                    id="description"
-                    name="description"
-                    placeholder="Tell us about your school and why you need support..."
-                    value={formData.description}
-                    onChange={handleChange}
-                    rows={4}
-                  />
+                  <Textarea id="description" name="description" placeholder="Tell us about your school and why you need support..." value={formData.description} onChange={handleChange} rows={4} />
                 </div>
 
                 {/* Bitnob Wallet (Required) */}
@@ -371,36 +284,18 @@ const SchoolRegistration = () => {
                       <Wallet className="w-4 h-4" />
                       Bitnob Wallet Address *
                     </Label>
-                    <Input
-                      id="walletAddress"
-                      name="walletAddress"
-                      placeholder="Enter your Bitnob wallet address"
-                      value={formData.walletAddress}
-                      onChange={handleChange}
-                      required
-                    />
+                    <Input id="walletAddress" name="walletAddress" placeholder="Enter your Bitnob wallet address" value={formData.walletAddress} onChange={handleChange} required />
                     <p className="text-xs text-muted-foreground">
-                      All donation transactions will be processed through your Bitnob wallet. 
-                      <a href="https://bitnob.com" target="_blank" rel="noopener noreferrer" className="text-primary underline ml-1">
+                      All donation transactions will be processed through your Bitnob wallet. This supports both on-ramping (receiving crypto) and off-ramping (converting to local currency via M-Pesa).{" "}
+                      <a href="https://bitnob.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">
                         Create a Bitnob account
                       </a> if you don't have one.
                     </p>
                   </div>
                 </div>
 
-                <Button 
-                  type="submit" 
-                  className="w-full bg-primary hover:bg-primary/90"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    "Submitting..."
-                  ) : (
-                    <>
-                      <School className="mr-2 w-4 h-4" />
-                      Register School
-                    </>
-                  )}
+                <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={loading}>
+                  {loading ? "Submitting..." : (<><School className="mr-2 w-4 h-4" />Register School</>)}
                 </Button>
               </form>
             </CardContent>
