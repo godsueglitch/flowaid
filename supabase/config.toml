@@ -1,7 +1,7 @@
 project_id = "fatemrpqgriwmtcxhzwd"
 
 [functions.process-donation]
-verify_jwt = true
+verify_jwt = false
 
 [functions.payment-callback]
 verify_jwt = false
