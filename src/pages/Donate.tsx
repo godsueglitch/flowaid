@@ -54,6 +54,7 @@ const Donate = () => {
   const [selectedSchoolName, setSelectedSchoolName] = useState<string | null>(null);
   const [allSchools, setAllSchools] = useState<SchoolOption[]>([]);
   const [modalSchoolId, setModalSchoolId] = useState<string | null>(null);
+  const [donationsByProduct, setDonationsByProduct] = useState<Record<string, number>>({});
   
   // Anonymous donor fields
   const [anonEmail, setAnonEmail] = useState("");
@@ -67,6 +68,7 @@ const Donate = () => {
     setSelectedSchoolId(schoolId);
     fetchProducts(schoolId);
     fetchAllSchools();
+    fetchDonationTotals();
     checkAuth();
     
     // Check if a specific product was requested
@@ -75,6 +77,19 @@ const Donate = () => {
       fetchProductById(productId);
     }
   }, [searchParams]);
+
+  const fetchDonationTotals = async () => {
+    const { data: donations } = await supabase
+      .from("donations")
+      .select("amount, product_id");
+    const map: Record<string, number> = {};
+    donations?.forEach((d) => {
+      if (d.product_id) {
+        map[d.product_id] = (map[d.product_id] || 0) + (d.amount || 0);
+      }
+    });
+    setDonationsByProduct(map);
+  };
 
   const fetchAllSchools = async () => {
     const { data } = await supabase
@@ -317,7 +332,7 @@ const Donate = () => {
                     location={product.schools?.location || "Kenya"}
                     imageUrl={product.image_url}
                     amountNeeded={product.price * (product.stock || 100)}
-                    amountRaised={product.price * Math.floor((product.stock || 100) * 0.3)}
+                    amountRaised={donationsByProduct[product.id] || 0}
                     isUrgent={product.is_featured || false}
                     studentsHelped={product.schools?.students_count || 0}
                     category="sanitary_pads"

@@ -53,6 +53,7 @@ const Home = () => {
   const [urgentProducts, setUrgentProducts] = useState<Product[]>([]);
   const [schools, setSchools] = useState<SchoolData[]>([]);
   const [stats, setStats] = useState<Stats>({ totalDonations: 0, totalSchools: 0, totalGirls: 0, totalProducts: 0 });
+  const [donationsByProduct, setDonationsByProduct] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -77,14 +78,25 @@ const Home = () => {
 
     // Fetch stats
     const { data: allSchools } = await supabase.from("schools").select("students_count");
-    const { data: donations } = await supabase.from("donations").select("amount").eq("status", "completed");
+    const { data: donations } = await supabase.from("donations").select("amount, product_id");
     const { data: products } = await supabase.from("products").select("id").eq("category", "sanitary_pads");
 
+    // Build a map of product_id -> total donated amount from real data
+    const donationsByProduct: Record<string, number> = {};
+    let totalDonationsAmount = 0;
+    donations?.forEach((d) => {
+      totalDonationsAmount += d.amount || 0;
+      if (d.product_id) {
+        donationsByProduct[d.product_id] = (donationsByProduct[d.product_id] || 0) + (d.amount || 0);
+      }
+    });
+
+    setDonationsByProduct(donationsByProduct);
+
     const totalGirls = allSchools?.reduce((acc, s) => acc + (s.students_count || 0), 0) || 0;
-    const totalDonations = donations?.reduce((acc, d) => acc + (d.amount || 0), 0) || 0;
 
     setStats({
-      totalDonations,
+      totalDonations: totalDonationsAmount,
       totalSchools: allSchools?.length || 0,
       totalGirls,
       totalProducts: products?.length || 0,
@@ -324,7 +336,7 @@ const Home = () => {
                   location={product.schools?.location || "Kenya"}
                   imageUrl={product.image_url}
                   amountNeeded={product.price * (product.stock || 100)}
-                  amountRaised={product.price * Math.floor((product.stock || 100) * 0.3)}
+                  amountRaised={donationsByProduct[product.id] || 0}
                   isUrgent={product.is_featured || false}
                   studentsHelped={product.schools?.students_count || 0}
                   schoolId={product.schools?.id}
